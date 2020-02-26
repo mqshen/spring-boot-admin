@@ -31,7 +31,8 @@ export const VIEW_GROUP = {
   JVM: 'jvm',
   LOGGING: 'logging',
   NONE: 'none',
-  SECURITY: 'security'
+  SECURITY: 'security',
+  JENKINS: 'jenkins'
 };
 
 export default views;

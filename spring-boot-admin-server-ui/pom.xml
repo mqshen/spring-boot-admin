@@ -81,7 +81,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>npm</executable>
+                            <executable>cnpm</executable>
                             <arguments>
                                 <argument>ci</argument>
                             </arguments>
@@ -95,7 +95,7 @@
                         </goals>
                         <configuration>
                             <skip>${skipNpmBuild}</skip>
-                            <executable>npm</executable>
+                            <executable>cnpm</executable>
                             <arguments>
                                 <argument>run</argument>
                                 <argument>build</argument>
@@ -105,21 +105,21 @@
                             </environmentVariables>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>npm-test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${skipTests}</skip>
-                            <executable>npm</executable>
-                            <arguments>
-                                <argument>run</argument>
-                                <argument>test:unit</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>npm-test</id>-->
+<!--                        <phase>test</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>exec</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <skip>${skipTests}</skip>-->
+<!--                            <executable>npm</executable>-->
+<!--                            <arguments>-->
+<!--                                <argument>run</argument>-->
+<!--                                <argument>test:unit</argument>-->
+<!--                            </arguments>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
                 </executions>
             </plugin>
             <plugin>

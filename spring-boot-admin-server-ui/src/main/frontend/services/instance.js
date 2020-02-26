@@ -144,6 +144,10 @@ class Instance {
     return this.axios.get(uri`actuator/caches`);
   }
 
+  async fetchJenkins() {
+    return this.axios.get(uri`actuator/jenkins`);
+  }
+
   async clearCaches() {
     return this.axios.delete(uri`actuator/caches`);
   }

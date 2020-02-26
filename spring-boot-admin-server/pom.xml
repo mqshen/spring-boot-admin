@@ -79,6 +79,11 @@
             <artifactId>spring-boot-autoconfigure-processor</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.offbytwo.jenkins</groupId>
+            <artifactId>jenkins-client</artifactId>
+            <version>0.3.8</version>
+        </dependency>
         <!-- Optional Configuration Processor for metadata -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -75,6 +75,9 @@ public class ProbeEndpointsStrategy implements EndpointDetectionStrategy {
 					log.warn("Endpoint probe for instance {} on endpoint '{}' failed: {}", instance.getId(), uri,
 							e.getMessage());
 					log.debug("Endpoint probe for instance {} on endpoint '{}' failed.", instance.getId(), uri, e);
+					if("jenkins".equals(endpoint.id)) {
+
+					}
 					return Mono.empty();
 				});
 	}
@@ -83,6 +86,8 @@ public class ProbeEndpointsStrategy implements EndpointDetectionStrategy {
 			EndpointDefinition endpointDefinition, URI uri) {
 		return (response) -> {
 			Mono<DetectedEndpoint> endpoint = Mono.empty();
+			if(uri.getPath().endsWith("jenkins") || uri.getPath().endsWith("actuator"))
+				System.out.println("---------");
 			if (response.statusCode().is2xxSuccessful()) {
 				endpoint = Mono.just(DetectedEndpoint.of(endpointDefinition, uri.toString()));
 				log.debug("Endpoint probe for instance {} on endpoint '{}' successful.", instanceId, uri);

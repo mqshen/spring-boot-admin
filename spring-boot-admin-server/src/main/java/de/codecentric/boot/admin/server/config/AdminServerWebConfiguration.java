@@ -17,6 +17,7 @@
 package de.codecentric.boot.admin.server.config;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import de.codecentric.boot.admin.server.web.JenkinsController;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -65,6 +66,12 @@ public class AdminServerWebConfiguration {
 	@ConditionalOnMissingBean
 	public ApplicationsController applicationsController(ApplicationRegistry applicationRegistry) {
 		return new ApplicationsController(applicationRegistry);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public JenkinsController jenkinsController() {
+		return new JenkinsController();
 	}
 
 	@Configuration(proxyBeanMethods = false)

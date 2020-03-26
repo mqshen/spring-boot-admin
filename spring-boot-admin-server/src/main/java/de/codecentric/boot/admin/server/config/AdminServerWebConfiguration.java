@@ -17,7 +17,6 @@
 package de.codecentric.boot.admin.server.config;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import de.codecentric.boot.admin.server.web.JenkinsController;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -36,6 +35,7 @@ import de.codecentric.boot.admin.server.utils.jackson.RegistrationDeserializer;
 import de.codecentric.boot.admin.server.utils.jackson.SanitizingMapSerializer;
 import de.codecentric.boot.admin.server.web.ApplicationsController;
 import de.codecentric.boot.admin.server.web.InstancesController;
+import de.codecentric.boot.admin.server.web.JenkinsController;
 import de.codecentric.boot.admin.server.web.client.InstanceWebClient;
 
 @Configuration(proxyBeanMethods = false)

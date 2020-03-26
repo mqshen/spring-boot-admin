@@ -3,7 +3,7 @@ spring:
     name: spring-boot-admin-sample-eureka
   profiles:
     active:
-      - secure
+      - insecure
 
 
 # tag::configuration-eureka[]
@@ -33,14 +33,35 @@ spring:
   profiles: insecure
 
 ---
+#spring:
+#  profiles: secure
+#  security:
+#    user:
+#      name: "user"
+#      password: "password"
+#eureka:
+#  instance:
+#    metadata-map:
+#      user.name: "user"         #These two are needed so that the server
+#      user.password: "password" #can access the protected client endpoints
+
+---
 spring:
-  profiles: secure
-  security:
-    user:
-      name: "user"
-      password: "password"
-eureka:
-  instance:
-    metadata-map:
-      user.name: "user"         #These two are needed so that the server
-      user.password: "password" #can access the protected client endpoints
+  boot:
+    admin:
+      deploy:
+        jenkins:
+          host: 123
+          user: 123
+          password: 123
+        services:
+          -
+            name: user-front
+            server:
+              - ifp3-dev1
+              - ifp3-dev2
+          -
+            name: user-center
+            server:
+              - ifp3-dev1
+              - ifp3-dev2

@@ -17,24 +17,21 @@
 package de.codecentric.boot.admin.server.domain.values;
 
 @lombok.Data
-public class Jenkins {
+public class JenkinsBuild {
 
-	private String projectName;
+	private boolean queued;
 
-	private String host;
+	private boolean building;
 
-	private String user;
+	private long duration;
 
-	private String password;
+	private long estimatedDuration;
 
-	private String args;
-
-	public Jenkins(String projectName, String host, String user, String password, String args) {
-		this.projectName = projectName;
-		this.host = host;
-		this.user = user;
-		this.password = password;
-		this.args = args;
+	public JenkinsBuild(boolean queued, boolean building, long duration, long estimatedDuration) {
+		this.queued = queued;
+		this.building = building;
+		this.duration = duration;
+		this.estimatedDuration = estimatedDuration;
 	}
 
 }

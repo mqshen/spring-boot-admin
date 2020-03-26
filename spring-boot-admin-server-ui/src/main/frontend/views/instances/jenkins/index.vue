@@ -15,7 +15,14 @@
   -->
 
 <template>
-<div>{{projectName}}<button @click="startBuild">构建</button></div> 
+  <div>
+    <span>{{ jenkins.projectName }}</span>
+    <div v-if="isBuilding">构建中... {{Math.floor(duration / estimatedDuration * 100)}}%</div> 
+    <div v-else-if="queued">等待构建</div> 
+    <div v-else>
+      <button @click="startBuild">构建</button>
+    </div> 
+  </div> 
 </template>
 
 <script>
@@ -37,10 +44,12 @@
     },
     data: function () {
       return {
-        projectName: '',
-        host: '',
-        user: '',
-        password: '',
+        jenkins: {projectName: ''},
+        isBuilding: false,
+        queued: false,
+        duration: 0,
+        estimatedDuration: 1,
+        axios: axios.create({ headers: {'Accept': 'application/json'} }),
       };
     },
     computed: {
@@ -56,26 +65,36 @@
         this.isLoading = true;
         try {
           const res = await this.instance.fetchJenkins();
-          this.projectName = res.data.projectName;
-          this.host = res.data.host;
-          this.user = res.data.user;
-          this.password = res.data.password;
+          this.jenkins.projectName = res.data.projectName;
+          this.jenkins.host = res.data.host;
+          this.jenkins.user = res.data.user;
+          this.jenkins.password = res.data.password;
+          this.jenkins.args = res.data.args;
+          this.getBuildStatus();
         } catch (error) {
           console.warn('Fetching caches failed:', error);
           this.error = error;
         }
         this.isLoading = false;
       },
+      getBuildStatus() {
+        this.axios.post('/jenkins/detail', this.jenkins).then(res => {
+          if(res.data) {
+            this.isBuilding = res.data.building;
+            this.queued = res.data.queued;
+            if(res.data.estimatedDuration > 0) {
+              this.duration = res.data.duration;
+              this.estimatedDuration = res.data.estimatedDuration;
+            }
+            if(this.isBuilding || this.queued)
+              setTimeout(() => this.getBuildStatus(), 3000);
+          }
+        });
+      },
       startBuild() {
-        const myAxios = axios.create({ 
-          headers: {'Accept': 'application/json'} 
-        });
-        myAxios.post('/buildJenkins', { 
-          projectName: this.projectName,
-          host: this.host,
-          user: this.user,
-          password: this.password,
-        });
+        this.queued = true;
+        this.axios.post('/jenkins/build', this.jenkins);
+        setTimeout(() => this.getBuildStatus(), 3000);
       }
     },
     created() {

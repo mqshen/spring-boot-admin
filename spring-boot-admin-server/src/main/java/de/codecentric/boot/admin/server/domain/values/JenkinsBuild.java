@@ -16,7 +16,10 @@
 
 package de.codecentric.boot.admin.server.domain.values;
 
+import lombok.AllArgsConstructor;
+
 @lombok.Data
+@AllArgsConstructor
 public class JenkinsBuild {
 
 	private boolean queued;
@@ -27,11 +30,18 @@ public class JenkinsBuild {
 
 	private long estimatedDuration;
 
-	public JenkinsBuild(boolean queued, boolean building, long duration, long estimatedDuration) {
-		this.queued = queued;
-		this.building = building;
-		this.duration = duration;
-		this.estimatedDuration = estimatedDuration;
+	private long timestamp;
+
+	public JenkinsBuild() {
+		this.queued = false;
+		this.building = false;
+		duration = 0;
+		estimatedDuration = 0;
+		timestamp = 0;
 	}
 
+	public JenkinsBuild(boolean queued, boolean building) {
+		this.queued = queued;
+		this.building = building;
+	}
 }

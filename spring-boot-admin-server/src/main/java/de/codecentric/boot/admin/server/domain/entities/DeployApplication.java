@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.config;
+package de.codecentric.boot.admin.server.domain.entities;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import java.util.List;
 
-@lombok.Data
-@ConfigurationProperties(prefix = "spring.boot.admin.deploy.jenkins")
-public class JenkinsProperties {
+import lombok.Data;
 
-	private String host;
+@Data
+public class DeployApplication {
 
-	private String user;
+	final String name;
 
-	private String password;
+	private final List<DeployInstance> instances;
 
 }

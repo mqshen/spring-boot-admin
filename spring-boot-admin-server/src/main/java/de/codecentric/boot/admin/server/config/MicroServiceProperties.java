@@ -16,16 +16,22 @@
 
 package de.codecentric.boot.admin.server.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import java.util.List;
+import java.util.Map;
 
-@lombok.Data
-@ConfigurationProperties(prefix = "spring.boot.admin.deploy.jenkins")
-public class JenkinsProperties {
+import lombok.Data;
 
-	private String host;
+@Data
+public class MicroServiceProperties {
 
-	private String user;
+	private String name;
 
-	private String password;
+	private String jenkinsJobName;
+
+	private String projectName;
+
+	private List<String> server;
+
+	Map<String, String> metadata;
 
 }

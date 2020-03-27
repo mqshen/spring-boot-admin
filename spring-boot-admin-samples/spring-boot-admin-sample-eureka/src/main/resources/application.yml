@@ -51,17 +51,21 @@ spring:
     admin:
       deploy:
         jenkins:
-          host: 123
-          user: 123
-          password: 123
+          host: http://ifp3-dev1:8080/
+          user: admin
+          password: 111f8d28f9be0415cda322bc26cf5f78b5
         services:
           -
             name: user-front
+            jenkinsJobName: ifp-poc
+            projectName: app-user-front
             server:
               - ifp3-dev1
               - ifp3-dev2
           -
             name: user-center
+            jenkinsJobName: ifp-poc
+            projectName: app-user-center
             server:
               - ifp3-dev1
               - ifp3-dev2

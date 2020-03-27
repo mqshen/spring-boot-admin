@@ -82,7 +82,8 @@ public class JenkinsController {
 			BuildWithDetails buildWithDetails = jobWithDetails.getLastBuild().details();
 			QueueItem queueItem = jobWithDetails.getQueueItem();
 			JenkinsBuild jenkinsBuild = new JenkinsBuild(queueItem != null, buildWithDetails.isBuilding(),
-					buildWithDetails.getDuration(), buildWithDetails.getEstimatedDuration());
+				buildWithDetails.getDuration(), buildWithDetails.getEstimatedDuration(),
+				buildWithDetails.getTimestamp());
 			return ResponseEntity.ok(jenkinsBuild);
 		}
 		catch (IOException ex) {

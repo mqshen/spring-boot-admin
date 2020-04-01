@@ -44,4 +44,5 @@ public class JenkinsBuild {
 		this.queued = queued;
 		this.building = building;
 	}
+
 }

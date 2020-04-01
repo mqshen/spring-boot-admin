@@ -27,6 +27,8 @@ public class DeployRequest {
 
 	String name;
 
-	String server;
+	String jobName;
+
+	String projectName;
 
 }

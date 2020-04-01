@@ -14,22 +14,32 @@ class Deploy{
         return this.axios.get(uri`deploy`);
     }
 
-    async doStop(name, server) {
-        return this.axios.post(uri`deploy/stop`,
-            {name: name, server: server },
-        );
+    async doShutdown(deployId) {
+        return this.axios.post(uri`deploy/shutdown/${deployId}`);
     }
 
-    async doBuild(name, server) {
-        return this.axios.post(uri`deploy/build`,
-            {name: name, server: server },
-        );
+    async doBuild(deployId) {
+        return this.axios.post(uri`deploy/build/${deployId}`);
     }
 
-    async queryDetail(name, server) {
-        return this.axios.post(uri`deploy/detail`,
-            {name: name, server: server },
-        );
+    async queryDetail(deployId) {
+        return this.axios.get(uri`deploy/detail/${deployId}`);
+    }
+
+    async queryBuildLog(deployId) {
+        return this.axios.get(uri`deploy/log/${deployId}`);
+    }
+
+    async stopBuild(deployId) {
+        return this.axios.get(uri`deploy/stop/${deployId}`);
+    }
+
+    async doAddService(deployRequest) {
+        return this.axios.post(uri`deploy/add`, deployRequest);
+    }
+
+    async doAddDeployServer(deployServerRequest) {
+        return this.axios.post(uri`deploy/server`, deployServerRequest);
     }
 }
 

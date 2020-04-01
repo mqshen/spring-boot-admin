@@ -23,6 +23,8 @@ import lombok.Data;
 @Data
 public class DeployApplication {
 
+	final Long id;
+
 	final String name;
 
 	private final List<DeployInstance> instances;

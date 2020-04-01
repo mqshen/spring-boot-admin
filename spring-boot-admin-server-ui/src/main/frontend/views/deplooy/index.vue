@@ -2,6 +2,7 @@
   <section class="section">
     <div class="container">
         <div class="applications-list">
+          <button class="button is-light" @click="showServiceModal = true">添加微服务</button>
             <div class="application-list-item card" :class="{'is-active': isExpanded}" v-for="deployApplication in deployApplications" :key="deployApplication.name">
                 <header class="hero "  v-on="$listeners">
                     <table class="table is-hoverable is-selectable is-fullwidth instances-list">
@@ -14,7 +15,9 @@
                                 <td width="20%">
                                     <span>{{deployApplication.instances.length}}</span>
                                 </td>
-                                <td width="40%" class="instance-list-item__actions"><!----></td>
+                                <td width="10%">
+                                </td>
+                                <td width="30%"><button class="button is-light" @click="startAddDeploy(deployApplication)">添加</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -22,20 +25,22 @@
                 <div class="card-content">
                     <table class="table is-hoverable is-selectable is-fullwidth instances-list">
                         <tbody>
-                            <tr v-for="(instance, index) in deployApplication.instances" :key="index">
+                            <tr v-for="instance in deployApplication.instances" :key="instance.id">
                                 <td width="5%"> <!--  --> </td>
                                 <td width="35%">{{instance.statusInfo.status}}</td>
                                 <td width="20%">
                                     <span>{{instance.server}}</span>
                                 </td>
-                                <td> {{instance.buildInfo.timestamp}} </td>
+                                <td> {{instance.buildInfo.timestamp | dataTimeFormat}} </td>
                                 <td width="30%">
                                   <template v-if="!(instance.buildInfo.queued || instance.buildInfo.building)">
-                                    <button class="button is-light" @click="doStop(deployApplication, index)">下线</button>
-                                    <button class="button is-light" @click="doBuild(deployApplication, index)">部署</button>
+                                    <button class="button is-light" @click="doShutdown(instance)">下线</button>
+                                    <button class="button is-light" @click="doBuild(instance)">部署</button>
                                   </template>
                                   <template v-else>
                                     部署中
+                                    <button class="button is-light" @click="stopBuild(instance)">停止部署</button>
+                                    <button class="button is-light" @click="showBuildLog(instance)">控制台输出</button>
                                   </template>
                                 </td>
                             </tr>
@@ -45,11 +50,58 @@
             </div>
         </div>
     </div>
+
+    <div class="modal" :class="{'is-active': showServiceModal}" >
+      <div class="modal-background" @click="showServiceModal = false" />
+      <div class="modal-content">
+        <div class="modal-card">
+          <input type="text" class="form-input" v-model="name" placeholder="微服务名字"/>
+          <input type="text" class="form-input" v-model="jobName" placeholder="Jekins工程名"/>
+          <input type="text" class="form-input" v-model="projectName" placeholder="子工程名字"/>
+          <button class="button is-light" @click="doAddService()">添加</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" :class="{'is-active': showDeployModal}" >
+      <div class="modal-background" @click="showDeployModal = false" />
+      <div class="modal-content">
+        <div class="modal-card">
+          <input type="text" class="form-input" v-model="host" placeholder="要部署的服务器"/>
+          <button class="button is-light" @click="doAddDeployServer()">添加</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" :class="{'is-active': showLog}" >
+      <div class="modal-background" @click="hideBuildLog" />
+      <div class="modal-content">
+        <div class="modal-card">
+        {{ buildLog }}
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
+<style scoped>
+.form-input {
+    line-height: 22px;
+    margin: 10px;
+    padding: 10px;
+    -webkit-appearance: none;
+    border: 0;
+}
+</style>
 <script>
-  import Deploy from '@/services/deploy'
+import Vue from 'vue'
+import Deploy from '@/services/deploy'
+import moment from 'moment';
+
+Vue.filter('dataTimeFormat', function (value) {
+  return moment(value).format('YYYY-MM-DD HH:mm:ss')
+})
+
   export default {
     props: {
       deployApplications: {
@@ -60,11 +112,19 @@
     data: function () {
       return {
         jenkins: {projectName: ''},
-        isBuilding: false,
         queued: false,
         duration: 0,
+        showLog: false,
+        buildLog: '',
         estimatedDuration: 1,
         deploy: new Deploy(),
+        showServiceModal: false,
+        showDeployModal: false,
+        name: '',
+        jobName: '',
+        projectName: '',
+        serverId: 0,
+        host: ''
       };
     },
     methods: {
@@ -76,7 +136,7 @@
           this.deployApplications = res.data
           this.deployApplications.map((application) => {
             application.instances.map((instance) => {
-              if(instance.buildInfo.queued || instance.buildInfo.isBuilding ) 
+              if(instance.buildInfo.queued || instance.buildInfo.building ) 
                 setTimeout(() => this.queryBuilding(instance, application.name), 3000);
             });
           })
@@ -86,26 +146,52 @@
         }
         this.isLoading = false;
       },
-      async doStop(deployApplication, index) {
-          const name = deployApplication.name;
-          const server = deployApplication.instances[index].server
-          const res = await this.deploy.doStop(name, server);
+      async doShutdown(instance) {
+          const res = await this.deploy.doShutdown(instance.id);
       },
-      queryBuilding(instance, name) {
-        this.deploy.queryDetail(name, instance.server).then((res) =>{
-          instance.buildInfo = res.data;
-          if(instance.buildInfo.queued || instance.buildInfo.isBuilding )
-            setTimeout(() => this.queryBuilding(instance, name), 3000);
+      hideBuildLog() {
+        this.showLog = false;
+      },
+      showBuildLog(instance) {
+        this.showLog = true;
+        this.deploy.queryBuildLog(instance.id).then((res) => {
+          this.buildLog = res.data;
         });
       },
-      async doBuild(deployApplication, index) {
-          const name = deployApplication.name;
-          const instance = deployApplication.instances[index];
-          const server = instance.server
-          instance.buildInfo.isBuilding = true;
-          const res = await this.deploy.doBuild(name, server);
-          setTimeout(() => this.queryBuilding(instance, name), 3000);
+      stopBuild(instance) {
+        this.deploy.stopBuild(instance.id).then((res) =>{
+        });
       },
+      queryBuilding(instance) {
+        this.deploy.queryDetail(instance.id).then((res) =>{
+          instance.buildInfo = res.data;
+          if(instance.buildInfo.queued || instance.buildInfo.building )
+            setTimeout(() => this.queryBuilding(instance), 3000);
+        });
+      },
+      async doBuild(instance) {
+          instance.buildInfo.building = true;
+          const res = await this.deploy.doBuild(instance.id);
+          setTimeout(() => this.queryBuilding(instance), 3000);
+      },
+      doAddService() {
+        const deployRequest = {"name": this.name, "jobName": this.jobName, "projectName": this.projectName}
+        this.deploy.doAddService(deployRequest).then((res) => {
+          this.fetchDeployInfo();
+          this.showServiceModal = false;
+        });
+      },
+      startAddDeploy(deployApplication) {
+        this.serviceId = deployApplication.id;
+        this.showDeployModal = true;
+      },
+      doAddDeployServer() {
+        const deployServerRequest = {"serviceId": this.serviceId, "host": this.host}
+        this.deploy.doAddDeployServer(deployServerRequest).then((res) => {
+          this.fetchDeployInfo();
+          this.showDeployModal = false;
+        });
+      }
     },
     created() {
       this.fetchDeployInfo();

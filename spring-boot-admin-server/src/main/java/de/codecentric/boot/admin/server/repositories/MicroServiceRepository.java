@@ -14,24 +14,16 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.domain.entities;
+package de.codecentric.boot.admin.server.repositories;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.springframework.data.repository.CrudRepository;
 
-import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
-import de.codecentric.boot.admin.server.domain.values.StatusInfo;
+import de.codecentric.boot.admin.server.domain.MicroService;
 
-@Data
-@AllArgsConstructor
-public class DeployInstance {
+import java.util.Optional;
 
-	private Long id;
+public interface MicroServiceRepository extends CrudRepository<MicroService, Long> {
 
-	private String server;
-
-	private StatusInfo statusInfo;
-
-	private JenkinsBuild buildInfo;
+	Optional<MicroService> findByName(String name);
 
 }

@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.domain.entities;
+package de.codecentric.boot.admin.server.domain.values;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
-import de.codecentric.boot.admin.server.domain.values.StatusInfo;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class DeployInstance {
+public class DeployServerRequest {
 
-	private Long id;
+	Long serviceId;
 
-	private String server;
-
-	private StatusInfo statusInfo;
-
-	private JenkinsBuild buildInfo;
+	String host;
 
 }

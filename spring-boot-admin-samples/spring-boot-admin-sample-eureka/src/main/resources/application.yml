@@ -6,6 +6,27 @@ spring:
       - insecure
 
 
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://101.251.195.186:3306/ifp_risk?characterEncoding=UTF-8&autoReconnect=true&useSSL=false
+    username: smartlife
+    password: belink!@#
+    driverClassName: com.mysql.jdbc.Driver
+    testWhileIdle: true
+    validationQuery: SELECT 1
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 5
+    jpa:
+      show-sql: true
+      hibernate:
+        ddl-auto: none
+        naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.MySQL5Dialect
+
+
 # tag::configuration-eureka[]
 eureka:   #<1>
   instance:

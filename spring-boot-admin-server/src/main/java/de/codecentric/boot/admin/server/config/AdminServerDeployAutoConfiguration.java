@@ -18,29 +18,47 @@ package de.codecentric.boot.admin.server.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import de.codecentric.boot.admin.server.services.ApplicationRegistry;
+import de.codecentric.boot.admin.server.services.DeployService;
 import de.codecentric.boot.admin.server.web.DeployController;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "spring.boot.admin.deploy", name = "enabled", havingValue = "true",
 		matchIfMissing = true)
-@EnableConfigurationProperties({ DeployProperties.class })
+@EnableConfigurationProperties({ JenkinsProperties.class })
+@EnableJpaRepositories("de.codecentric.boot.admin.server.repositories")
+@EntityScan("de.codecentric.boot.admin.server.domain")
+@ComponentScan("de.codecentric.boot.admin.server.services")
+@EnableAspectJAutoProxy
 public class AdminServerDeployAutoConfiguration {
 
-	private final DeployProperties deployProperties;
+	private final JenkinsProperties jenkinsProperties;
 
-	public AdminServerDeployAutoConfiguration(DeployProperties deployProperties) {
-		this.deployProperties = deployProperties;
+	private final DeployService deployService;
+
+	public AdminServerDeployAutoConfiguration(JenkinsProperties jenkinsProperties, DeployService deployService) {
+		this.jenkinsProperties = jenkinsProperties;
+		this.deployService = deployService;
 	}
+
+	// @Bean
+	// @ConditionalOnMissingBean
+	// public DeployController deployService(ApplicationRegistry applicationRegistry) {
+	// return new DeployController(applicationRegistry, deployService);
+	// }
 
 	@Bean
 	@ConditionalOnMissingBean
 	public DeployController deployController(ApplicationRegistry applicationRegistry) {
-		return new DeployController(deployProperties, applicationRegistry);
+		return new DeployController(applicationRegistry, deployService);
 	}
 
 }

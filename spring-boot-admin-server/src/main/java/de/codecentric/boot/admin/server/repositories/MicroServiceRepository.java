@@ -16,11 +16,11 @@
 
 package de.codecentric.boot.admin.server.repositories;
 
+import java.util.Optional;
+
 import org.springframework.data.repository.CrudRepository;
 
 import de.codecentric.boot.admin.server.domain.MicroService;
-
-import java.util.Optional;
 
 public interface MicroServiceRepository extends CrudRepository<MicroService, Long> {
 

@@ -55,4 +55,5 @@ public class MicroService {
 		this.jobName = jobName;
 		this.projectName = projectName;
 	}
+
 }

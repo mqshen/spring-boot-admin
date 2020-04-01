@@ -29,8 +29,6 @@ import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
-import de.codecentric.boot.admin.server.domain.values.DeployRequest;
-import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +39,8 @@ import org.springframework.util.StringUtils;
 import de.codecentric.boot.admin.server.config.JenkinsProperties;
 import de.codecentric.boot.admin.server.domain.DeployServer;
 import de.codecentric.boot.admin.server.domain.MicroService;
+import de.codecentric.boot.admin.server.domain.values.DeployRequest;
+import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.repositories.DeployServerRepository;
 import de.codecentric.boot.admin.server.repositories.MicroServiceRepository;
@@ -214,14 +214,16 @@ public class DeployService {
 			microService.setProjectName(deployRequest.getProjectName());
 		}
 		else {
-			microService = new MicroService(deployRequest.getName(), deployRequest.getJobName(), deployRequest.getProjectName());
+			microService = new MicroService(deployRequest.getName(), deployRequest.getJobName(),
+					deployRequest.getProjectName());
 		}
 		microService = microServiceRepository.save(microService);
 		return microService.getId();
 	}
 
 	public Long addDeployServer(DeployServerRequest deployServerRequest) {
-		Optional<MicroService> microServiceOptional = microServiceRepository.findById(deployServerRequest.getServiceId());
+		Optional<MicroService> microServiceOptional = microServiceRepository
+				.findById(deployServerRequest.getServiceId());
 		if (microServiceOptional.isPresent()) {
 			MicroService microService = microServiceOptional.get();
 			DeployServer deployServer = new DeployServer(microService.getId(), deployServerRequest.getHost());
@@ -230,4 +232,5 @@ public class DeployService {
 		}
 		return 0L;
 	}
+
 }

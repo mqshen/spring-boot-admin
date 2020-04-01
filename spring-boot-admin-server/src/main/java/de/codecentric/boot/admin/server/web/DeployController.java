@@ -22,8 +22,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import de.codecentric.boot.admin.server.domain.values.DeployRequest;
-import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -38,6 +36,8 @@ import de.codecentric.boot.admin.server.domain.entities.Application;
 import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
 import de.codecentric.boot.admin.server.domain.entities.DeployInstance;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
+import de.codecentric.boot.admin.server.domain.values.DeployRequest;
+import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.domain.values.StatusInfo;
 import de.codecentric.boot.admin.server.services.ApplicationRegistry;
@@ -136,4 +136,5 @@ public class DeployController {
 	public Long addDeployServer(@RequestBody DeployServerRequest deployServerRequest) {
 		return deployService.addDeployServer(deployServerRequest);
 	}
+
 }

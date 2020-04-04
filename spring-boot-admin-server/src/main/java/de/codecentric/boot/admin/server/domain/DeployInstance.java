@@ -16,71 +16,54 @@
 
 package de.codecentric.boot.admin.server.domain;
 
-import java.util.List;
+import java.util.Date;
 
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
-@Table(name = "ifp_micro_service")
-public class MicroService {
+@Table(name = "ifp_deploy_instance")
+public class DeployInstance {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	Long id;
 
-	String name;
+	Long serviceId;
 
-	String jobName;
+	Long serverId;
 
-	String projectName;
+	String queueId;
 
-	@Enumerated(EnumType.ORDINAL)
-	DeployType deployType;
+	Date lastDeployTime;
 
-	boolean autoStart;
+	String lastBuildId;
 
-	String branch;
+//	@ManyToOne(fetch = FetchType.LAZY, targetEntity = MicroService.class)
+//	@JoinColumn(name = "serviceId", insertable = false, updatable = false)
+//	private MicroService service;
 
-	String rollbackBranch;
+//	@ManyToOne(fetch = FetchType.LAZY, targetEntity = DeployServer.class)
+//	@JoinColumn(name = "serverId", insertable = false, updatable = false)
+//	private DeployServer server;
 
-	String profile;
-
-	int port;
-
-	String path;
-
-	String env;
-
-	String parameter;
-
-	public MicroService(String name, String jobName, String projectName, DeployType deployType, boolean autoStart,
-						String branch, String rollbackBranch, String profile, int port, String path,
-						String env, String parameter) {
-		this.name = name;
-		this.jobName = jobName;
-		this.projectName = projectName;
-		this.deployType = deployType;
-		this.autoStart = autoStart;
-		this.branch = branch;
-		this.rollbackBranch = rollbackBranch;
-		this.profile = profile;
-		this.port = port;
-		this.path = path;
-		this.env = env;
-		this.parameter = parameter;
+	public DeployInstance(Long serviceId, Long serverId) {
+		this.serviceId = serviceId;
+		this.serverId = serverId;
 	}
+
 }

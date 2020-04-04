@@ -16,7 +16,7 @@
 
 package de.codecentric.boot.admin.server.domain.values;
 
-import de.codecentric.boot.admin.server.domain.LoginType;
+import de.codecentric.boot.admin.server.domain.DeployType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,20 +24,31 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeployServerRequest {
-
+public class ServiceRequest {
 	Long id;
-
-	Long environmentId;
 
 	String name;
 
-	String ip;
+	String jobName;
 
-	LoginType loginType;
+	String projectName;
 
-	String user;
+	DeployType deployType;
 
-	String password;
+	boolean autoStart;
+
+	String branch;
+
+	String rollbackBranch;
+
+	String profile;
+
+	int port;
+
+	String path;
+
+	String env;
+
+	String parameter;
 
 }

@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import de.codecentric.boot.admin.server.services.ApplicationRegistry;
 import de.codecentric.boot.admin.server.services.DeployService;
 import de.codecentric.boot.admin.server.web.DeployController;
 
@@ -57,8 +56,8 @@ public class AdminServerDeployAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DeployController deployController(ApplicationRegistry applicationRegistry) {
-		return new DeployController(applicationRegistry, deployService);
+	public DeployController deployController() {
+		return new DeployController(deployService);
 	}
 
 }

@@ -14,30 +14,13 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.domain.values;
+package de.codecentric.boot.admin.server.repositories;
 
-import de.codecentric.boot.admin.server.domain.LoginType;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class DeployServerRequest {
+import de.codecentric.boot.admin.server.domain.Environment;
+import org.springframework.data.repository.CrudRepository;
 
-	Long id;
+public interface EnvironmentRepository extends CrudRepository<Environment, Long> {
 
-	Long environmentId;
-
-	String name;
-
-	String ip;
-
-	LoginType loginType;
-
-	String user;
-
-	String password;
 
 }

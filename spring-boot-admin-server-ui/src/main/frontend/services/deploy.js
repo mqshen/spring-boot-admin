@@ -14,6 +14,10 @@ class Deploy{
         return this.axios.get(uri`deploy`);
     }
 
+    async queryServers() {
+        return this.axios.get(uri`deploy/server`);
+    }
+
     async doShutdown(deployId) {
         return this.axios.post(uri`deploy/shutdown/${deployId}`);
     }
@@ -35,7 +39,7 @@ class Deploy{
     }
 
     async doAddService(deployRequest) {
-        return this.axios.post(uri`deploy/add`, deployRequest);
+        return this.axios.post(uri`deploy/service`, deployRequest);
     }
 
     async doAddDeployServer(deployServerRequest) {

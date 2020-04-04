@@ -23,12 +23,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeployRequest {
+public class DeployInstanceRequest {
 
-	String name;
+	Long serviceId;
 
-	String jobName;
-
-	String projectName;
+	Long serverId;
 
 }

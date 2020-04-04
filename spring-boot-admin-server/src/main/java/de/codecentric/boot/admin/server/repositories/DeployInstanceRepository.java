@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.domain.entities;
+package de.codecentric.boot.admin.server.repositories;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import java.util.List;
 
-import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
-import de.codecentric.boot.admin.server.domain.values.StatusInfo;
+import de.codecentric.boot.admin.server.domain.DeployInstance;
+import org.springframework.data.repository.CrudRepository;
 
-@Data
-@AllArgsConstructor
-public class DeployInstance {
+public interface DeployInstanceRepository extends CrudRepository<DeployInstance, Long> {
 
-	private Long id;
+	List<DeployInstance> findByServerId(Long serverId);
 
-	private String server;
-
-	private StatusInfo statusInfo;
-
-	private JenkinsBuild buildInfo;
+	List<DeployInstance> findByServiceId(Long serviceId);
 
 }

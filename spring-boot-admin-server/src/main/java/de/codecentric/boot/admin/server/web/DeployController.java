@@ -18,9 +18,6 @@ package de.codecentric.boot.admin.server.web;
 
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,76 +29,39 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import reactor.core.publisher.Mono;
 
-import de.codecentric.boot.admin.server.domain.entities.Application;
 import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
-import de.codecentric.boot.admin.server.domain.entities.DeployInstance;
-import de.codecentric.boot.admin.server.domain.entities.Instance;
-import de.codecentric.boot.admin.server.domain.values.DeployRequest;
+import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
+import de.codecentric.boot.admin.server.domain.values.ServerInfo;
+import de.codecentric.boot.admin.server.domain.values.ServiceRequest;
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
-import de.codecentric.boot.admin.server.domain.values.StatusInfo;
-import de.codecentric.boot.admin.server.services.ApplicationRegistry;
 import de.codecentric.boot.admin.server.services.DeployService;
 
 @AdminController
 @ResponseBody
 public class DeployController {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(DeployController.class);
-
-	private final ApplicationRegistry registry;
 
 	private final DeployService deployService;
 
-	// private final Map<String, String> buildMap;
 
-	public DeployController(ApplicationRegistry registry, DeployService deployService) {
-		this.registry = registry;
+	public DeployController(DeployService deployService) {
 		this.deployService = deployService;
 	}
 
 	@GetMapping(path = "/deploy", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Mono<List<DeployApplication>> applications() {
-		return registry.getApplications().collectList().map((applications) -> {
-			List<DeployApplication> deployApplications = StreamSupport
-					.stream(deployService.getService().spliterator(), true).map((service) -> {
-						List<DeployInstance> deployInstances;
-						Optional<Application> applicationOptional = applications.stream()
-								.filter((application) -> service.getName().toUpperCase().equals(application.getName()))
-								.findFirst();
-						if (applicationOptional.isPresent()) {
-							Application application = applicationOptional.get();
-							deployInstances = service.getServers().stream().map((server) -> {
-								Optional<Instance> instanceOptional = application.getInstances().stream()
-										.filter((instance) -> instance.getRegistration().getServiceUrl()
-												.contains(server.getHost()))
-										.findFirst();
-								JenkinsBuild jenkinsBuild = deployService.getBuildInfo(service.getJobName(), server);
-								if (instanceOptional.isPresent()) {
-									return new DeployInstance(server.getId(), server.getHost(),
-											instanceOptional.get().getStatusInfo(), jenkinsBuild);
-								}
-								else {
-									return new DeployInstance(server.getId(), server.getHost(),
-											StatusInfo.valueOf("UNKNOWN"), jenkinsBuild);
-								}
-							}).collect(Collectors.toList());
-						}
-						else {
-							deployInstances = service.getServers().stream().map((server) -> {
-								JenkinsBuild jenkinsBuild = deployService.getBuildInfo(service.getJobName(), server);
-								return new DeployInstance(server.getId(), server.getHost(),
-										StatusInfo.valueOf("UNKNOWN"), jenkinsBuild);
-							}).collect(Collectors.toList());
-						}
-						return new DeployApplication(service.getId(), service.getName(), deployInstances);
-					}).collect(Collectors.toList());
-			return deployApplications;
-		});
+		return deployService.getAllApplication();
+	}
+
+	@PostMapping(path = "/deploy/service", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Long addService(@RequestBody ServiceRequest serviceRequest) {
+		return deployService.addService(serviceRequest);
 	}
 
 	@PostMapping(path = "/deploy/shutdown/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Mono<String> doShutdown(@PathVariable("deployId") Long deployId) {
+
 		return Mono.just("stop need implement");
 	}
 
@@ -117,6 +77,11 @@ public class DeployController {
 		return deployService.getBuildInfoById(deployId);
 	}
 
+	@PostMapping(path = "/deploy/instance", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Long addDeployInstance(@RequestBody DeployInstanceRequest deployInstanceRequest) {
+		return deployService.addDeployInstance(deployInstanceRequest);
+	}
+
 	@GetMapping(path = "/deploy/stop/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Boolean doStop(@PathVariable("deployId") Long deployId) {
 		return deployService.stopBuild(deployId);
@@ -127,14 +92,13 @@ public class DeployController {
 		return deployService.getBuildLog(deployId);
 	}
 
-	@PostMapping(path = "/deploy/add", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Long addDeploy(@RequestBody DeployRequest deployRequest) {
-		return deployService.addDeploy(deployRequest);
+	@GetMapping(path = "/deploy/server", produces = MediaType.APPLICATION_JSON_VALUE)
+	public  Mono<List<ServerInfo>> getDeployServer() {
+		return deployService.getAllServer();
 	}
 
 	@PostMapping(path = "/deploy/server", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Long addDeployServer(@RequestBody DeployServerRequest deployServerRequest) {
 		return deployService.addDeployServer(deployServerRequest);
 	}
-
 }

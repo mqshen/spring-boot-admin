@@ -18,15 +18,40 @@ package de.codecentric.boot.admin.server.domain.entities;
 
 import java.util.List;
 
+import de.codecentric.boot.admin.server.domain.DeployType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class DeployApplication {
 
 	final Long id;
 
 	final String name;
 
-	private final List<DeployInstance> instances;
+	String jobName;
+
+	String projectName;
+
+	DeployType deployType;
+
+	boolean autoStart;
+
+	String branch;
+
+	String rollbackBranch;
+
+	String profile;
+
+	int port;
+
+	String path;
+
+	String env;
+
+	String parameter;
+
+	private final List<DeployInstanceInfo> instances;
 
 }

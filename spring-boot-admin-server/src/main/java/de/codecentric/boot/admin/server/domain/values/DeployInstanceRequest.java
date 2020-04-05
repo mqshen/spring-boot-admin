@@ -25,6 +25,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DeployInstanceRequest {
 
+	Long id;
+
 	Long serviceId;
 
 	Long serverId;

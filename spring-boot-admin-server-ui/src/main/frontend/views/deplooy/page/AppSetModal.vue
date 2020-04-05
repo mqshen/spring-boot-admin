@@ -133,7 +133,7 @@ export default {
       _this.$nextTick(() => {
         setTimeout(() => {
           _this.form.setFieldsValue(pick(_this.mdl, 'id', 'serviceId', 'serviceName', 'serverId', 'serverName', 
-            'group', 'branch', 'rollbackBranch', 'destination'))
+            'group', 'branch', 'rollbackBranch', 'profile'))
         })
       })
     }

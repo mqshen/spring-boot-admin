@@ -94,8 +94,8 @@
             </template>
             <template v-else>
               <a-menu-item> <a>上线</a> </a-menu-item>
-              <a-menu-item> <a>下线</a> </a-menu-item>
-              <a-menu-item> <a>回滚</a> </a-menu-item>
+              <a-menu-item> <a @click="doShutdown(record)">下线</a> </a-menu-item>
+              <a-menu-item> <a @click="doRollback(record)">回滚</a> </a-menu-item>
               <a-menu-item> <a @click="doSettings(record)">更新配置</a> </a-menu-item>
               <a-menu-item> <a>控制台输出</a> </a-menu-item>
             </template>
@@ -202,6 +202,7 @@ import Vue from 'vue'
     },
     mounted() {
       this.fetchDeployInfo();
+      this.onChange();
     },
     methods: {
       handleOk () {
@@ -230,10 +231,21 @@ import Vue from 'vue'
         this.$refs.setModal.add(app);
       },
       doSettings(instance) {
-        const app = {id: instance.id, 
+        const app = Object.assign({id: instance.id, 
           serviceName: instance.name,
-          serverName: instance.server}
+          serverName: instance.server}, instance);
         this.$refs.setModal.edit(app);
+      },
+      doShutdown(instance) {
+        this.deploy.doShutdown(instance.sbaId).then(() =>{
+          setTimeout(() => this.queryBuilding(instance), 3000);
+        });
+      },
+      doRollback(instance) {
+        instance.buildInfo.building = true;
+        this.deploy.doRollback(instance.id).then(() =>{
+          setTimeout(() => this.queryBuilding(instance), 3000);
+        });
       },
       doBuild(instance) {
         instance.buildInfo.building = true;
@@ -241,6 +253,37 @@ import Vue from 'vue'
           setTimeout(() => this.queryBuilding(instance), 3000);
         });
       },
+      onChange() {
+          const eventSource = new EventSource('deploy');
+          eventSource.onmessage = (message) => {
+            this.transformResponse(message.data)
+          }
+          eventSource.onerror = (err) => {
+            window.console.log(err);
+          }
+      },
+      processInstance(data) {
+        this.applications.forEach((application) => {
+          for(var i = 0; i < application.instances.length; ++i) {
+            if (application.instances[i].id == data.id) {
+              Object.assign(application.instances[i], data);
+            }
+          }
+        });
+      },
+      transformResponse(data) {
+        if (!data) {
+          return data;
+        }
+        const json = JSON.parse(data);
+        if (json instanceof Array) {
+          json.forEach((instance) => {
+            this.processInstance(instance);
+          });
+        } else {
+          this.processInstance(json);
+        }
+      }
     } 
   }
 </script>

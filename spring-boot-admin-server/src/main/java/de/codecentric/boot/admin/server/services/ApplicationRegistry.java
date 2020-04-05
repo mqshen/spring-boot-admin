@@ -142,4 +142,7 @@ public class ApplicationRegistry {
 		return (t1.compareTo(t2) >= 0) ? t1 : t2;
 	}
 
+	public InstanceEventPublisher getInstanceEventPublisher() {
+		return instanceEventPublisher;
+	}
 }

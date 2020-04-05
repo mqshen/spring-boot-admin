@@ -30,6 +30,10 @@ class Deploy{
         return this.axios.post(uri`deploy/build/${deployId}`);
     }
 
+    async doRollback(deployId) {
+        return this.axios.post(uri`deploy/rollback/${deployId}`);
+    }
+
     async queryDetail(deployId) {
         return this.axios.get(uri`deploy/detail/${deployId}`);
     }

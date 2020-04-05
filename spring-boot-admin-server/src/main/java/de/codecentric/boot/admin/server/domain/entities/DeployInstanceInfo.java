@@ -29,6 +29,8 @@ public class DeployInstanceInfo {
 
 	private Long id;
 
+	private String sbaId;
+
 	private String name;
 
 	private String server;

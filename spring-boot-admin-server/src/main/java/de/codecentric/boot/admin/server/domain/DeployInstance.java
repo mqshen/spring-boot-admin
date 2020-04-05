@@ -47,7 +47,7 @@ public class DeployInstance {
 
 	Long serverId;
 
-	int group;
+	int serviceGroup;
 
 	String branch;
 

@@ -29,4 +29,12 @@ public class DeployInstanceRequest {
 
 	Long serverId;
 
+	int group;
+
+	String branch;
+
+	String rollbackBranch;
+
+	String profile;
+
 }

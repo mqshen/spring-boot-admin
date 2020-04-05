@@ -14,6 +14,10 @@ class Deploy{
         return this.axios.get(uri`deploy`);
     }
 
+    async listServers() {
+        return this.axios.get(uri`deploy/list/servers`);
+    }
+
     async queryServers() {
         return this.axios.get(uri`deploy/server`);
     }
@@ -40,6 +44,10 @@ class Deploy{
 
     async doAddService(deployRequest) {
         return this.axios.post(uri`deploy/service`, deployRequest);
+    }
+
+    async doAddDeployInstance(instanceRequest) {
+        return this.axios.post(uri`deploy/instance`, instanceRequest);
     }
 
     async doAddDeployServer(deployServerRequest) {

@@ -5,7 +5,7 @@
     :activeTabKey="titleKey"
     @tabChange="key => handleTabChange(key, 'titleKey')"
   >
-    <app-tab v-if="titleKey === 'app'"></app-tab>
+    <app-tab v-if="titleKey === 'app'" :servers="servers" :deploy="deploy"></app-tab>
     <server-tab v-else></server-tab>
   </a-card>
 </template>
@@ -15,6 +15,7 @@ import './common.js'
 import 'ant-design-vue/dist/antd.css';
 import AppTab from './AppTab'
 import ServerTab from './ServerTab'
+import Deploy from '@/services/deploy'
 
 export default {
   name: 'deploy',
@@ -34,8 +35,15 @@ export default {
           tab: '服务器'
         }
       ],
-      titleKey: 'app'
+      titleKey: 'app',
+      servers: [],
+      deploy: new Deploy()
     }
+  },
+  mounted() {
+    this.deploy.listServers().then((res) => {
+      this.servers = res.data;
+    });
   },
   methods: {
     handleTabChange (key, type) {

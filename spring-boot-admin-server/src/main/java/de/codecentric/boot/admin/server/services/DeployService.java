@@ -381,7 +381,7 @@ public class DeployService {
 	public Mono<List<ServerInfo>> getAllServer() {
 		return registry.getApplications().collectList().map((applications) -> {
 			List<ServerInfo> deployServers = StreamSupport
-				.stream(deployServerRepository.findAll().spliterator(), false).map((server) -> {
+				.stream(deployServerRepository.findAll().spliterator(), true).map((server) -> {
 					List<DeployInstanceInfo> deployInstances;
 					List<DeployInstance> instances = deployInstanceRepository.findByServerId(server.getId());
 					deployInstances = instances.stream().map((instance) -> {
@@ -444,6 +444,10 @@ public class DeployService {
 			microService.getName(),
 			server.getName(),
 			ProtocolSchema + server.getName() + ":" + microService.getPort(),
+			deployInstance.getGroup(),
+			deployInstance.getBranch(),
+			deployInstance.getRollbackBranch(),
+			deployInstance.getProfile(),
 			statusInfo, jenkinsBuild, operationInfo);
 	}
 
@@ -476,5 +480,12 @@ public class DeployService {
 		Mono<ClientResponse> clientResponseMono = instanceWebProxy.forward(this.instanceRegistry.getInstance(InstanceId.of(instanceId)), uri
 			, HttpMethod.POST, new HttpHeaders(), BodyInserters.empty());
 		return clientResponseMono.map((response) -> response.statusCode().equals(HttpStatus.OK));
+	}
+
+	public List<ServerInfo> listServers() {
+		return StreamSupport
+			.stream(deployServerRepository.findAll().spliterator(), true).map((deployServer) ->
+				new ServerInfo(deployServer.getId(), deployServer.getName(), deployServer.getIp())
+		).collect(Collectors.toList());
 	}
 }

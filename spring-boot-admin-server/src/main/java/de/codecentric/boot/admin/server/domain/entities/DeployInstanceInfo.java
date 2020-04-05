@@ -35,6 +35,14 @@ public class DeployInstanceInfo {
 
 	private String url;
 
+	int group;
+
+	String branch;
+
+	String rollbackBranch;
+
+	String profile;
+
 	private StatusInfo statusInfo;
 
 	private JenkinsBuild buildInfo;

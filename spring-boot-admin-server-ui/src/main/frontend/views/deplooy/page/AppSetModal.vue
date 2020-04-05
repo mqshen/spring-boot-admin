@@ -7,9 +7,33 @@
     :afterClose="handleClose">
     <a-form :form="form">
       <a-card :bordered="false">
-        <a-form-item v-bind="formItemLay" label="应用ID">
-          <span class="ant-form-text">{{ mdl.appId }}</span>
+        <a-form-item v-bind="formItemLay" label="" style="display:none">
+          <a-input v-decorator="['id']"/>
         </a-form-item>
+        <a-form-item v-bind="formItemLay" label="" style="display:none">
+          <a-input v-decorator="['serviceId']"/>
+        </a-form-item>
+        <a-form-item v-bind="formItemLay" label="应用ID">
+          <span class="ant-form-text">{{ mdl.serviceName }}</span>
+        </a-form-item>
+        <template v-if="isAdd">
+          <a-form-item v-bind="formItemLay" label="服务器" >
+            <a-select v-decorator="['serverId']" placeholder="请选择" class="ifp-selector">
+              <a-select-option v-for="server in servers" :key="server.id" :value="server.id">
+                {{ server.name }} ({{ server.ip }})
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </template>
+        <template v-else>
+          <a-form-item v-bind="formItemLay" label="" style="display:none" >
+            <a-input v-decorator="['serverId']"/>
+          </a-form-item>
+          <a-form-item v-bind="formItemLay" label="服务器" >
+            <span class="ant-form-text">{{ mdl.serverName }}</span>
+          </a-form-item>
+        </template>
+        
         <a-form-item v-bind="formItemLay" label="分组">
           <a-radio-group v-decorator="['group']">
             <a-radio :value="1">默认</a-radio>
@@ -18,13 +42,13 @@
           </a-radio-group>
         </a-form-item>
         <a-form-item v-bind="formItemLay" label="部署分支">
-          <a-input v-decorator="['deployDev']" />
+          <a-input v-decorator="['branch']" />
         </a-form-item>
         <a-form-item v-bind="formItemLay" label="回滚分支">
-          <a-input v-decorator="['taskType']" />
+          <a-input v-decorator="['rollbackBranch']" />
         </a-form-item>
         <a-form-item v-bind="formItemLay" label="PROFILE_ACITVE">
-          <a-input v-decorator="['destination',{rules:[{required:true}]}]" />
+          <a-input v-decorator="['profile',{rules:[{required:true}]}]" />
         </a-form-item>
       </a-card>
     </a-form>
@@ -33,9 +57,20 @@
 
 <script>
 import pick from 'lodash.pick'
+import Deploy from '@/services/deploy'
 
 export default {
   name: 'AppSetModal',
+  props: {
+    deploy: {
+      type: Deploy,
+      default: () => new Deploy(),
+    },
+    servers: {
+      type: Array,
+      default: () => [],
+    }
+  },
   data () {
     return {
       formItemLay: {
@@ -58,6 +93,7 @@ export default {
       },
       form: this.$form.createForm(this),
       visible: false,
+      isAdd: false,
       mdl: {}
     }
   },
@@ -65,6 +101,9 @@ export default {
     handleSubmit () {
       this.form.validateFields((err, values) => {
         if (!err) {
+          this.deploy.doAddDeployInstance(values).then(() => {
+            this.fetchDeployInfo();
+          });
           window.console.log('Received values of form: ', values)
         }
       })
@@ -74,14 +113,27 @@ export default {
       this.mdl = {}
       this.form.resetFields()
     },
-    edit (record) {
+    add (record) {
+      this.mdl = Object.assign({}, record)
+      this.visible = true
+      this.isAdd = true
       const _this = this
       _this.mdl = Object.assign({}, record)
       _this.visible = true
       _this.$nextTick(() => {
         setTimeout(() => {
-          _this.form.setFieldsValue(pick(_this.mdl, 'group', 'deployDev', 'taskType',
-            'destination'))
+          _this.form.setFieldsValue(pick(_this.mdl, 'serviceId', 'serviceName'))
+        })
+      })
+    },
+    edit(record) {
+      const _this = this
+      _this.mdl = Object.assign({}, record)
+      _this.visible = true
+      _this.$nextTick(() => {
+        setTimeout(() => {
+          _this.form.setFieldsValue(pick(_this.mdl, 'id', 'serviceId', 'serviceName', 'serverId', 'serverName', 
+            'group', 'branch', 'rollbackBranch', 'destination'))
         })
       })
     }
@@ -90,10 +142,10 @@ export default {
 </script>
 
 <style scoped>
-  .ant-card-grid{
+  .ant-card-grid {
     box-shadow:none;
-    .ant-form-item{
-      margin-bottom:0px;
-    }
+  }
+  .ant-card-grid .ant-form-item {
+    margin-bottom:0px;
   }
 </style>

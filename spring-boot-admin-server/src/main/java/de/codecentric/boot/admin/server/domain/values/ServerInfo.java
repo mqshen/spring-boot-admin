@@ -30,6 +30,12 @@ public class ServerInfo {
 
 	List<DeployInstanceInfo> instances;
 
+	public ServerInfo(Long id, String name, String ip) {
+		this.id = id;
+		this.name = name;
+		this.ip = ip;
+	}
+
 	public ServerInfo(Long id, EnvironmentInfo environment, String name, String ip, LoginType loginType, String user) {
 		this.id = id;
 		this.environment = environment;

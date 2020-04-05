@@ -83,20 +83,20 @@
         <template v-else>
           <a @click="doBuild(record)">部署</a>
           <a-divider type="vertical" />
-        <template>
+        </template>
         <a-dropdown>
           <a class="ant-dropdown-link">
             更多 <a-icon type="down" />
           </a>
           <a-menu slot="overlay">
             <template v-if="record.instances">
-              <a-menu-item> <a>新添服务器</a> </a-menu-item>
+              <a-menu-item> <a @click="addServer(record)">新添服务器</a> </a-menu-item>
             </template>
             <template v-else>
               <a-menu-item> <a>上线</a> </a-menu-item>
               <a-menu-item> <a>下线</a> </a-menu-item>
               <a-menu-item> <a>回滚</a> </a-menu-item>
-              <a-menu-item> <a>更新配置</a> </a-menu-item>
+              <a-menu-item> <a @click="doSettings(record)">更新配置</a> </a-menu-item>
               <a-menu-item> <a>控制台输出</a> </a-menu-item>
             </template>
           </a-menu>
@@ -104,7 +104,7 @@
       </span>
     </a-table>
     <app-modal ref="modal" @ok="handleOk" :deploy="deploy"/>
-    <app-set-modal ref="setModal" @ok="handleSOk" />
+    <app-set-modal ref="setModal" @ok="handleSOk" :servers="servers"/>
   </div>
 </template>
 <script>
@@ -179,6 +179,10 @@ import Vue from 'vue'
         type: Deploy,
         default: () => new Deploy(),
       },
+      servers: {
+        type: Array,
+        default: () => [],
+      }
     },
     components: {
       AppModal,
@@ -197,9 +201,7 @@ import Vue from 'vue'
       }
     },
     mounted() {
-      this.deploy.fetchDeploy().then((res) =>{
-        this.applications = res.data;
-      });
+      this.fetchDeployInfo();
     },
     methods: {
       handleOk () {
@@ -207,6 +209,11 @@ import Vue from 'vue'
       },
       handleSOk () {
         
+      },
+      fetchDeployInfo() {
+        this.deploy.fetchDeploy().then((res) =>{
+          this.applications = res.data;
+        });
       },
       modifyApplication(application) {
         this.$refs.modal.edit(application);
@@ -217,6 +224,16 @@ import Vue from 'vue'
           if(instance.buildInfo.queued || instance.buildInfo.building )
             setTimeout(() => this.queryBuilding(instance), 3000);
         });
+      },
+      addServer(microService) {
+        const app = {serviceId: microService.id, serviceName: microService.name}
+        this.$refs.setModal.add(app);
+      },
+      doSettings(instance) {
+        const app = {id: instance.id, 
+          serviceName: instance.name,
+          serverName: instance.server}
+        this.$refs.setModal.edit(app);
       },
       doBuild(instance) {
         instance.buildInfo.building = true;

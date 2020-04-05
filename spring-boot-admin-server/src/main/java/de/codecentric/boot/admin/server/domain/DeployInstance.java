@@ -47,6 +47,14 @@ public class DeployInstance {
 
 	Long serverId;
 
+	int group;
+
+	String branch;
+
+	String rollbackBranch;
+
+	String profile;
+
 	String queueId;
 
 	Date lastDeployTime;

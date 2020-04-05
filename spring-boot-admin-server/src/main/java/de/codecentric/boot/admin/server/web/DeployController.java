@@ -54,6 +54,11 @@ public class DeployController {
 		return deployService.getAllApplication();
 	}
 
+	@GetMapping(path = "/deploy/list/servers", produces = MediaType.APPLICATION_JSON_VALUE)
+	public List<ServerInfo> listServers() {
+		return deployService.listServers();
+	}
+
 	@PostMapping(path = "/deploy/service", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Long addService(@RequestBody ServiceRequest serviceRequest) {
 		return deployService.addService(serviceRequest);

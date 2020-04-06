@@ -16,11 +16,11 @@
 
 package de.codecentric.boot.admin.server.domain.entities;
 
-import de.codecentric.boot.admin.server.domain.values.OperationInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
+import de.codecentric.boot.admin.server.domain.values.OperationInfo;
 import de.codecentric.boot.admin.server.domain.values.StatusInfo;
 
 @Data
@@ -50,4 +50,5 @@ public class DeployInstanceInfo {
 	private JenkinsBuild buildInfo;
 
 	private OperationInfo operationInfo;
+
 }

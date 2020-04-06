@@ -19,15 +19,11 @@ package de.codecentric.boot.admin.server.domain;
 import java.util.Date;
 
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -61,13 +57,13 @@ public class DeployInstance {
 
 	String lastBuildId;
 
-//	@ManyToOne(fetch = FetchType.LAZY, targetEntity = MicroService.class)
-//	@JoinColumn(name = "serviceId", insertable = false, updatable = false)
-//	private MicroService service;
+	// @ManyToOne(fetch = FetchType.LAZY, targetEntity = MicroService.class)
+	// @JoinColumn(name = "serviceId", insertable = false, updatable = false)
+	// private MicroService service;
 
-//	@ManyToOne(fetch = FetchType.LAZY, targetEntity = DeployServer.class)
-//	@JoinColumn(name = "serverId", insertable = false, updatable = false)
-//	private DeployServer server;
+	// @ManyToOne(fetch = FetchType.LAZY, targetEntity = DeployServer.class)
+	// @JoinColumn(name = "serverId", insertable = false, updatable = false)
+	// private DeployServer server;
 
 	public DeployInstance(Long serviceId, Long serverId) {
 		this.serviceId = serviceId;

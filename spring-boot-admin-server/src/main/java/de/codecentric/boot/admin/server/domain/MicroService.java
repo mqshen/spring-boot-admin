@@ -16,17 +16,12 @@
 
 package de.codecentric.boot.admin.server.domain;
 
-import java.util.List;
-
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import lombok.Data;
@@ -68,8 +63,7 @@ public class MicroService {
 	String parameter;
 
 	public MicroService(String name, String jobName, String projectName, DeployType deployType, boolean autoStart,
-						String branch, String rollbackBranch, String profile, int port, String path,
-						String env, String parameter) {
+			String branch, String rollbackBranch, String profile, int port, String path, String env, String parameter) {
 		this.name = name;
 		this.jobName = jobName;
 		this.projectName = projectName;
@@ -83,4 +77,5 @@ public class MicroService {
 		this.env = env;
 		this.parameter = parameter;
 	}
+
 }

@@ -22,8 +22,8 @@ class Deploy{
         return this.axios.get(uri`deploy/server`);
     }
 
-    async doShutdown(deployId) {
-        return this.axios.post(uri`deploy/shutdown/${deployId}`);
+    async doShutdown(shutdownRequest) {
+        return this.axios.post(uri`deploy/shutdown`, shutdownRequest);
     }
 
     async doBuild(deployId) {

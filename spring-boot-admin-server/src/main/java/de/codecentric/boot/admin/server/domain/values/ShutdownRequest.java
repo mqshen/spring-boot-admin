@@ -14,29 +14,19 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.domain;
+package de.codecentric.boot.admin.server.domain.values;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@Entity
+@Data
 @NoArgsConstructor
-@Table(name = "ifp_environment")
-public class Environment {
+@AllArgsConstructor
+public class ShutdownRequest {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	Long id;
+	String instanceId;
 
-	String name;
+	Long deployInstanceId;
 
 }

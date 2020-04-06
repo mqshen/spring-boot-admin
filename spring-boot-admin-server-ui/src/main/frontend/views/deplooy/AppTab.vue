@@ -56,7 +56,7 @@
       </span>
       <span slot="recordInfo" slot-scope="text,record">
         <template v-if="record.operationInfo">
-          <span>{{ record.operationInfo.operationType }}</span>
+          <span>{{ record.operationInfo.operationType | operationFilter}}</span>
           <p>{{ record.operationInfo.opTime }}</p>
         </template>
       </span>
@@ -97,13 +97,14 @@
               <a-menu-item> <a @click="doShutdown(record)">下线</a> </a-menu-item>
               <a-menu-item> <a @click="doRollback(record)">回滚</a> </a-menu-item>
               <a-menu-item> <a @click="doSettings(record)">更新配置</a> </a-menu-item>
-              <a-menu-item> <a>控制台输出</a> </a-menu-item>
+              <a-menu-item> <a @click="showBuildLog(record)">控制台输出</a> </a-menu-item>
             </template>
           </a-menu>
         </a-dropdown>
       </span>
     </a-table>
     <app-modal ref="modal" @ok="handleOk" :deploy="deploy"/>
+    <build-log ref="logModal" @ok="handleOk" :deploy="deploy"/>
     <app-set-modal ref="setModal" @ok="handleSOk" :servers="servers"/>
   </div>
 </template>
@@ -111,8 +112,24 @@
 import Vue from 'vue'
   import AppModal from './page/AppModal.vue'
   import AppSetModal from './page/AppSetModal.vue'
+  import BuildLog from './page/BuildLog.vue'
   import Deploy from '@/services/deploy'
   
+  Vue.filter('operationFilter', function (value) {
+    if (value == 0 ) {
+      return ''
+    } else if (value == 1 ) {
+      return '部署'
+    } else if (value == 2 ) {
+      return '上线'
+    } else if (value == 3 ) {
+      return '下线'
+    } else if (value == 4 ) {
+      return '回滚'
+    } else if (value == 5 ) {
+      return ''
+    }
+  });
   Vue.filter('statusFilter', function (values) {
     var hasUp = false;
     var hasDown = false;
@@ -186,7 +203,8 @@ import Vue from 'vue'
     },
     components: {
       AppModal,
-      AppSetModal
+      AppSetModal,
+      BuildLog
     },
     data() {
       return {
@@ -230,6 +248,9 @@ import Vue from 'vue'
         const app = {serviceId: microService.id, serviceName: microService.name}
         this.$refs.setModal.add(app);
       },
+      showBuildLog(instance) {
+        this.$refs.logModal.show(instance.id);
+      },
       doSettings(instance) {
         const app = Object.assign({id: instance.id, 
           serviceName: instance.name,
@@ -237,7 +258,8 @@ import Vue from 'vue'
         this.$refs.setModal.edit(app);
       },
       doShutdown(instance) {
-        this.deploy.doShutdown(instance.sbaId).then(() =>{
+        const shutdownRequest = {'instanceId': instance.sbaId, 'deployInstanceId': instance.id};
+        this.deploy.doShutdown(shutdownRequest).then(() => {
           setTimeout(() => this.queryBuilding(instance), 3000);
         });
       },
@@ -249,39 +271,51 @@ import Vue from 'vue'
       },
       doBuild(instance) {
         instance.buildInfo.building = true;
-        this.deploy.doBuild(instance.id).then(() =>{
-          setTimeout(() => this.queryBuilding(instance), 3000);
-        });
+        this.deploy.doBuild(instance.id)
+        // .then(() =>{
+        //    setTimeout(() => this.queryBuilding(instance), 3000);
+        // });
       },
       onChange() {
           const eventSource = new EventSource('deploy');
           eventSource.onmessage = (message) => {
-            this.transformResponse(message.data)
+            this.transformResponse(message.data, false)
           }
           eventSource.onerror = (err) => {
             window.console.log(err);
           }
+          const jenkinsEventSource = new EventSource('deploy/jenkins');
+          jenkinsEventSource.onmessage = (message) => {
+            this.transformResponse(message.data, true)
+          }
+          jenkinsEventSource.onerror = (err) => {
+            window.console.log(err);
+          }
       },
-      processInstance(data) {
+      processInstance(data, onlyJenkins) {
         this.applications.forEach((application) => {
           for(var i = 0; i < application.instances.length; ++i) {
             if (application.instances[i].id == data.id) {
-              Object.assign(application.instances[i], data);
+              if (onlyJenkins) {
+                Object.assign(application.instances[i].buildInfo, data.buildInfo);
+              } else {
+                Object.assign(application.instances[i], data);
+              }
             }
           }
         });
       },
-      transformResponse(data) {
+      transformResponse(data, onlyJenkins) {
         if (!data) {
           return data;
         }
         const json = JSON.parse(data);
         if (json instanceof Array) {
           json.forEach((instance) => {
-            this.processInstance(instance);
+            this.processInstance(instance, onlyJenkins);
           });
         } else {
-          this.processInstance(json);
+          this.processInstance(json, onlyJenkins);
         }
       }
     } 

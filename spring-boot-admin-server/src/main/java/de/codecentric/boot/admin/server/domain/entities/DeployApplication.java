@@ -18,9 +18,10 @@ package de.codecentric.boot.admin.server.domain.entities;
 
 import java.util.List;
 
-import de.codecentric.boot.admin.server.domain.DeployType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import de.codecentric.boot.admin.server.domain.DeployType;
 
 @Data
 @AllArgsConstructor

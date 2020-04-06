@@ -16,11 +16,10 @@
 
 package de.codecentric.boot.admin.server.repositories;
 
-
-import de.codecentric.boot.admin.server.domain.Environment;
 import org.springframework.data.repository.CrudRepository;
 
-public interface EnvironmentRepository extends CrudRepository<Environment, Long> {
+import de.codecentric.boot.admin.server.domain.Environment;
 
+public interface EnvironmentRepository extends CrudRepository<Environment, Long> {
 
 }

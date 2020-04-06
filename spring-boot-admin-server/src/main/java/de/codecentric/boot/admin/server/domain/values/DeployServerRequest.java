@@ -16,10 +16,11 @@
 
 package de.codecentric.boot.admin.server.domain.values;
 
-import de.codecentric.boot.admin.server.domain.LoginType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import de.codecentric.boot.admin.server.domain.LoginType;
 
 @Data
 @NoArgsConstructor

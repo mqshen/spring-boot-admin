@@ -16,15 +16,17 @@
 
 package de.codecentric.boot.admin.server.domain.values;
 
-import de.codecentric.boot.admin.server.domain.DeployType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import de.codecentric.boot.admin.server.domain.DeployType;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceRequest {
+
 	Long id;
 
 	String name;

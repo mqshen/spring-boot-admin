@@ -145,4 +145,5 @@ public class ApplicationRegistry {
 	public InstanceEventPublisher getInstanceEventPublisher() {
 		return instanceEventPublisher;
 	}
+
 }

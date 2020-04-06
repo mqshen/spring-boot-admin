@@ -20,8 +20,6 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.List;
 
-import de.codecentric.boot.admin.server.domain.entities.Application;
-import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -35,25 +33,27 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
+import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
+import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.domain.values.ServerInfo;
 import de.codecentric.boot.admin.server.domain.values.ServiceRequest;
-import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
+import de.codecentric.boot.admin.server.domain.values.ShutdownRequest;
 import de.codecentric.boot.admin.server.services.DeployService;
 
 @AdminController
 @ResponseBody
 public class DeployController {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(DeployController.class);
 
 	private static final ServerSentEvent<?> PING = ServerSentEvent.builder().comment("ping").build();
 
 	private static final Flux<ServerSentEvent<?>> PING_FLUX = Flux.interval(Duration.ZERO, Duration.ofSeconds(10L))
-		.map((tick) -> PING);
+			.map((tick) -> PING);
 
 	private final DeployService deployService;
-
 
 	public DeployController(DeployService deployService) {
 		this.deployService = deployService;
@@ -66,8 +66,14 @@ public class DeployController {
 
 	@GetMapping(path = "/deploy", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	public Flux<ServerSentEvent<DeployInstanceInfo>> applicationsStream() {
-		return deployService.getAllApplicationStream().map((application) -> ServerSentEvent.builder(application).build())
-			.mergeWith(ping());
+		return deployService.getAllApplicationStream()
+				.map((application) -> ServerSentEvent.builder(application).build()).mergeWith(ping());
+	}
+
+	@GetMapping(path = "/deploy/jenkins", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public Flux<ServerSentEvent<DeployInstanceInfo>> jenkinsStream() {
+		return deployService.getJenkinsBuild().map((jenkinsBuild) -> ServerSentEvent.builder(jenkinsBuild).build())
+				.mergeWith(ping());
 	}
 
 	@GetMapping(path = "/deploy/list/servers", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -80,10 +86,10 @@ public class DeployController {
 		return deployService.addService(serviceRequest);
 	}
 
-	@PostMapping(path = "/deploy/shutdown/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Mono<Boolean> doShutdown(@PathVariable("deployId") String deployId) {
+	@PostMapping(path = "/deploy/shutdown", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Mono<Boolean> doShutdown(@RequestBody ShutdownRequest shutdownRequest) {
 		LOGGER.debug("shutdown an instance");
-		return deployService.shutdown(deployId);
+		return deployService.shutdown(shutdownRequest.getInstanceId(), shutdownRequest.getDeployInstanceId());
 	}
 
 	@PostMapping(path = "/deploy/build/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -102,7 +108,7 @@ public class DeployController {
 
 	@GetMapping(path = "/deploy/detail/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public JenkinsBuild queryDetail(@PathVariable("deployId") Long deployId) {
-		return deployService.getBuildInfoById(deployId);
+		return deployService.getBuildInfoById(deployId).orElse(new JenkinsBuild());
 	}
 
 	@PostMapping(path = "/deploy/instance", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -121,7 +127,7 @@ public class DeployController {
 	}
 
 	@GetMapping(path = "/deploy/server", produces = MediaType.APPLICATION_JSON_VALUE)
-	public  Mono<List<ServerInfo>> getDeployServer() {
+	public Mono<List<ServerInfo>> getDeployServer() {
 		return deployService.getAllServer();
 	}
 
@@ -133,4 +139,5 @@ public class DeployController {
 	private static <T> Flux<ServerSentEvent<T>> ping() {
 		return (Flux<ServerSentEvent<T>>) (Flux) PING_FLUX;
 	}
+
 }

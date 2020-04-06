@@ -18,8 +18,9 @@ package de.codecentric.boot.admin.server.repositories;
 
 import java.util.List;
 
-import de.codecentric.boot.admin.server.domain.DeployInstance;
 import org.springframework.data.repository.CrudRepository;
+
+import de.codecentric.boot.admin.server.domain.DeployInstance;
 
 public interface DeployInstanceRepository extends CrudRepository<DeployInstance, Long> {
 

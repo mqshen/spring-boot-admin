@@ -66,4 +66,21 @@ export default {
 .ifp-selector {
   width: 100px;
 }
+.table-page-search-wrapper .ant-form-inline .ant-form-item{
+  display: flex;
+  margin-bottom: 24px;
+  margin-right: 0;
+}
+.table-page-search-wrapper .ant-form-inline .ant-form-item>.ant-form-item-label {
+    line-height: 32px;
+    padding-right: 8px;
+    width: auto;
+}
+.table-page-search-wrapper .ant-form-inline .ant-form-item .ant-form-item-control-wrapper {
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1;
+    flex: .6 1;
+    display: inline-block;
+    vertical-align: middle;
+}
 </style>

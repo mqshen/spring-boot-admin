@@ -106,8 +106,8 @@
       documentationBaseUrl() {
         return `https://codecentric.github.io/spring-boot-admin/${this.version || 'current'}`;
       }
-    },
-    install({viewRegistry}) {
+    }
+    /* install({viewRegistry}) {
       viewRegistry.addView({
         path: '/about',
         name: 'about',
@@ -115,7 +115,7 @@
         order: 200,
         component: this
       });
-    }
+    } */
   };
 </script>
 

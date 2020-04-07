@@ -33,9 +33,10 @@
               <span v-text="linkTitle" />
             </a>
             <div class="navbar-dropdown">
-              <a class="navbar-item" href="http://39.106.80.206:9090/" target="_blank">服务注册</a>
-              <a class="navbar-item" href="http://39.106.80.206:8079/" target="_blank">熔断监控</a>
-              <a class="navbar-item" href="http://39.106.80.206:9411/" target="_blank">链路追踪</a>
+              <a class="navbar-item" href="http://192.168.203.147:9090/" target="_blank">服务注册</a>
+              <a class="navbar-item" href="http://192.168.203.147:8079/" target="_blank">熔断监控</a>
+              <a class="navbar-item" href="http://192.168.203.147:9411/" target="_blank">链路追踪</a>
+              <a class="navbar-item" href="http://192.168.203.147:5601/" target="_blank">Kibana</a>
             </div>
           </div>
           <template v-for="view in enabledViews">

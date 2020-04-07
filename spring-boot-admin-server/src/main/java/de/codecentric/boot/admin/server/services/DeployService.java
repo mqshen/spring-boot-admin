@@ -112,8 +112,8 @@ public class DeployService {
 	@Autowired
 	InstanceWebClient.Builder instanceWebClientBuilder;
 
-	@Autowired
-	JenkinsService jenkinsService;
+	// @Autowired
+	// JenkinsService jenkinsService;
 
 	@Autowired
 	private JenkinsProperties jenkinsProperties;
@@ -151,20 +151,23 @@ public class DeployService {
 											.map((deployInstance) -> generateDeployInstanceInfo(
 													deployServers.get(deployInstance.getServerId()), service,
 													deployInstance, Optional.of(instance)))
-											.get())
-							.get();
+											.orElse(DeployInstanceInfo.empty()))
+							.orElse(DeployInstanceInfo.empty());
 					return info;
 				});
 	}
 
-	public Flux<DeployInstanceInfo> getJenkinsBuild() {
-		return Flux.from(jenkinsService.getJenkinsPublisher()).flatMap((deployId) -> {
-			DeployInstance deployInstance = deployInstanceRepository.findById(deployId).get();
-			MicroService microService = microServiceRepository.findById(deployInstance.getServiceId()).get();
-			DeployServer deployServer = deployServerRepository.findById(deployInstance.getServerId()).get();
-			return Mono.just(generateDeployInstanceInfo(deployServer, microService, deployInstance, Optional.empty()));
-		});
-	}
+	// public Flux<DeployInstanceInfo> getJenkinsBuild() {
+	// return Flux.from(jenkinsService.getJenkinsPublisher()).flatMap((deployId) -> {
+	// DeployInstance deployInstance = deployInstanceRepository.findById(deployId).get();
+	// MicroService microService =
+	// microServiceRepository.findById(deployInstance.getServiceId()).get();
+	// DeployServer deployServer =
+	// deployServerRepository.findById(deployInstance.getServerId()).get();
+	// return Mono.just(generateDeployInstanceInfo(deployServer, microService,
+	// deployInstance, Optional.empty()));
+	// });
+	// }
 
 	public Mono<List<DeployApplication>> getAllApplication() {
 		return getAllApplication(registry.getApplications().collectList());
@@ -223,7 +226,7 @@ public class DeployService {
 	}
 
 	public String startBuild(Long instanceId, boolean rollback) throws URISyntaxException {
-		jenkinsService.startListener(instanceId);
+		// jenkinsService.startListener(instanceId);
 
 		Operation operation;
 		if (rollback) {
@@ -245,7 +248,8 @@ public class DeployService {
 
 				Map<String, String> param = new HashMap<>(); // service.getMetadata();
 				param.put("projectName", microService.getProjectName());
-				param.put("server", microService.getName());
+				DeployServer deployServer = deployServerRepository.findById(instance.getServerId()).get();
+				param.put("server", deployServer.getName());
 
 				if (rollback) {
 					if (instance.getRollbackBranch() != null) {
@@ -339,9 +343,9 @@ public class DeployService {
 					jenkinsBuild = new JenkinsBuild(pair.getSecond(), buildWithDetails.isBuilding(),
 							buildWithDetails.getDuration(), buildWithDetails.getEstimatedDuration(),
 							buildWithDetails.getTimestamp());
-					if (!jenkinsBuild.isBuilding() && !jenkinsBuild.isQueued()) {
-						jenkinsService.stopListener(deployInstance.getId());
-					}
+					// if (!jenkinsBuild.isBuilding() && !jenkinsBuild.isQueued()) {
+					// jenkinsService.stopListener(deployInstance.getId());
+					// }
 				}
 				else {
 					jenkinsBuild = new JenkinsBuild(pair.getSecond(), false, 0, 0, 0);

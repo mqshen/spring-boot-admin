@@ -70,11 +70,12 @@ public class DeployController {
 				.map((application) -> ServerSentEvent.builder(application).build()).mergeWith(ping());
 	}
 
-	@GetMapping(path = "/deploy/jenkins", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-	public Flux<ServerSentEvent<DeployInstanceInfo>> jenkinsStream() {
-		return deployService.getJenkinsBuild().map((jenkinsBuild) -> ServerSentEvent.builder(jenkinsBuild).build())
-				.mergeWith(ping());
-	}
+	// @GetMapping(path = "/deploy/jenkins", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	// public Flux<ServerSentEvent<DeployInstanceInfo>> jenkinsStream() {
+	// return deployService.getJenkinsBuild().map((jenkinsBuild) ->
+	// ServerSentEvent.builder(jenkinsBuild).build())
+	// .mergeWith(ping());
+	// }
 
 	@GetMapping(path = "/deploy/list/servers", produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ServerInfo> listServers() {

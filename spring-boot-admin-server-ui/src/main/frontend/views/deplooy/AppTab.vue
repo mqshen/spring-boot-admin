@@ -51,7 +51,7 @@
           {{ record.instances | statusFilter }}
         </template>
         <template v-else>
-          部署中
+          部署中 <a-spin/>
         </template>
       </span>
       <span slot="recordInfo" slot-scope="text,record">
@@ -284,13 +284,13 @@ import Vue from 'vue'
           eventSource.onerror = (err) => {
             window.console.log(err);
           }
-          const jenkinsEventSource = new EventSource('deploy/jenkins');
-          jenkinsEventSource.onmessage = (message) => {
-            this.transformResponse(message.data, true)
-          }
-          jenkinsEventSource.onerror = (err) => {
-            window.console.log(err);
-          }
+          // const jenkinsEventSource = new EventSource('deploy/jenkins');
+          // jenkinsEventSource.onmessage = (message) => {
+          //   this.transformResponse(message.data, true)
+          // }
+          // jenkinsEventSource.onerror = (err) => {
+          //   window.console.log(err);
+          // }
       },
       processInstance(data, onlyJenkins) {
         this.applications.forEach((application) => {

@@ -18,6 +18,7 @@ package de.codecentric.boot.admin.server.domain.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.domain.values.OperationInfo;
@@ -25,6 +26,7 @@ import de.codecentric.boot.admin.server.domain.values.StatusInfo;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class DeployInstanceInfo {
 
 	private Long id;
@@ -50,5 +52,9 @@ public class DeployInstanceInfo {
 	private JenkinsBuild buildInfo;
 
 	private OperationInfo operationInfo;
+
+	public static DeployInstanceInfo empty() {
+		return new DeployInstanceInfo();
+	}
 
 }

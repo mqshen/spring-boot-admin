@@ -254,6 +254,7 @@ public class DeployService {
 				param.put("projectName", microService.getProjectName());
 				DeployServer deployServer = deployServerRepository.findById(instance.getServerId()).get();
 				param.put("server", deployServer.getName());
+				param.put("userName", deployServer.getUser());
 
 				if (rollback) {
 					if (instance.getRollbackBranch() != null) {

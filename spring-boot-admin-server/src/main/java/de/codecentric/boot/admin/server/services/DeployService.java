@@ -208,6 +208,9 @@ public class DeployService {
 	}
 
 	public Flux<Optional<DeployInstance>> doRefresh() {
+		initDeployServer();
+		initMicroService();
+		initDeployInstance();
 		return instanceRegistry.getInstances().map((instance) -> getDeployInstance(instance));
 	}
 

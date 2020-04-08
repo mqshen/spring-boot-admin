@@ -146,7 +146,7 @@ public class DeployService {
 			if (microService.getName().toUpperCase().equals(instance.getRegistration().getName())) {
 				DeployServer deployServer = deployServers.get(deployInstance.getServerId());
 				return instance.getRegistration().getServiceUrl().contains(deployServer.getName())
-						|| instance.getRegistration().getServiceUrl().contains(deployServer.getIp());
+					|| instance.getRegistration().getServiceUrl().contains(deployServer.getIp());
 			}
 			else {
 				return false;
@@ -158,17 +158,17 @@ public class DeployService {
 
 	protected void initDeployServer() {
 		deployServers = StreamSupport.stream(deployServerRepository.findAll().spliterator(), true)
-				.collect(Collectors.toMap(DeployServer::getId, Function.identity()));
+			.collect(Collectors.toMap(DeployServer::getId, Function.identity()));
 	}
 
 	protected void initMicroService() {
 		microServices = StreamSupport.stream(microServiceRepository.findAll().spliterator(), true)
-				.collect(Collectors.toMap(MicroService::getId, Function.identity()));
+			.collect(Collectors.toMap(MicroService::getId, Function.identity()));
 	}
 
 	protected void initDeployInstance() {
 		deployInstances = StreamSupport.stream(deployInstanceRepository.findAll().spliterator(), true)
-				.collect(Collectors.toMap(DeployInstance::getId, Function.identity()));
+			.collect(Collectors.toMap(DeployInstance::getId, Function.identity()));
 	}
 
 	@PostConstruct
@@ -183,10 +183,10 @@ public class DeployService {
 
 		taskExecutor.execute(() -> {
 			Flux.from(registry.getInstanceEventPublisher())
-					.flatMap((event) -> this.instanceRegistry.getInstance(event.getInstance())).map((instance) -> {
-						getDeployInstance(instance);
-						return true;
-					});
+				.flatMap((event) -> this.instanceRegistry.getInstance(event.getInstance())).map((instance) -> {
+				getDeployInstance(instance);
+				return true;
+			});
 		});
 
 		LOGGER.info("deploy service init complete");
@@ -217,103 +217,37 @@ public class DeployService {
 
 	public Flux<DeployInstanceInfo> getAllApplicationStream() {
 		return Flux.from(registry.getInstanceEventPublisher())
-<<<<<<< HEAD
-				.flatMap((event) -> this.instanceRegistry.getInstance(event.getInstance())).map((instance) -> {
-					DeployInstanceInfo info = StreamSupport.stream(microServiceRepository.findAll().spliterator(), true)
-							.filter((service) -> service.getName().toUpperCase()
-									.equals(instance.getRegistration().getName()))
-							.findFirst().map((service) -> deployInstanceRepository.findByServiceId(service.getId())
-									.stream().filter((server) -> {
-										DeployServer deployServer = deployServers.get(server.getServerId());
-										String serviceUrl = instance.getRegistration().getServiceUrl();
-										return serviceUrl.contains(deployServer.getName())
-												|| serviceUrl.contains(deployServer.getIp());
-									}).findFirst()
-									.map((deployInstance) -> generateDeployInstanceInfo(
-											deployServers.get(deployInstance.getServerId()), service, deployInstance,
-											Optional.of(instance)))
-									.orElse(DeployInstanceInfo.empty()))
-							.orElse(DeployInstanceInfo.empty());
-					return info;
-				});
-=======
-				.flatMap((event) -> this.instanceRegistry.getInstance(event.getInstance()))
-				.map((instance) -> getDeployInstance(instance)
-						.map((deployInstance) -> generateDeployInstanceInfo(deployInstance))
-						.orElse(DeployInstanceInfo.empty()));
->>>>>>> inmemory
+			.flatMap((event) -> this.instanceRegistry.getInstance(event.getInstance()))
+			.map((instance) -> getDeployInstance(instance)
+				.map((deployInstance) -> generateDeployInstanceInfo(deployInstance))
+				.orElse(DeployInstanceInfo.empty()));
 	}
 
 	public List<DeployApplication> getAllApplication() {
 		return microServices.values().stream().map((service) -> {
 			List<DeployInstanceInfo> deployInstancesInfo;
 			deployInstancesInfo = deployInstances.values().stream()
-					.filter((deployInstance) -> deployInstance.getServiceId().equals(service.getId()))
-					.map((deployInstance) -> generateDeployInstanceInfo(deployInstance)).collect(Collectors.toList());
+				.filter((deployInstance) -> deployInstance.getServiceId().equals(service.getId()))
+				.map((deployInstance) -> generateDeployInstanceInfo(deployInstance)).collect(Collectors.toList());
 
 			return new DeployApplication(service.getId(), service.getName(), service.getJobName(),
-					service.getProjectName(), service.getDeployType(), service.isAutoStart(), service.getBranch(),
-					service.getRollbackBranch(), service.getProfile(), service.getPort(), service.getPath(),
-					service.getEnv(), service.getParameter(), deployInstancesInfo);
+				service.getProjectName(), service.getDeployType(), service.isAutoStart(), service.getBranch(),
+				service.getRollbackBranch(), service.getProfile(), service.getPort(), service.getPath(),
+				service.getEnv(), service.getParameter(), deployInstancesInfo);
 		}).collect(Collectors.toList());
 	}
 
-<<<<<<< HEAD
-	public Mono<List<DeployApplication>> getAllApplication(Mono<List<Application>> applicationsMono) {
-		Map<Long, DeployServer> deployServers = StreamSupport
-				.stream(deployServerRepository.findAll().spliterator(), true)
-				.collect(Collectors.toMap(DeployServer::getId, Function.identity()));
-		return applicationsMono.map((applications) -> {
-			List<DeployApplication> deployApplications = StreamSupport
-					.stream(microServiceRepository.findAll().spliterator(), true).map((service) -> {
-						List<DeployInstanceInfo> deployInstancesInfo;
-						List<DeployInstance> deployInstances = deployInstanceRepository
-								.findByServiceId(service.getId());
-						Optional<Application> applicationOptional = applications.stream()
-								.filter((application) -> service.getName().toUpperCase().equals(application.getName()))
-								.findFirst();
-						if (applicationOptional.isPresent()) {
-							Application application = applicationOptional.get();
-							deployInstancesInfo = deployInstances.stream().map((server) -> {
-								Optional<Instance> instanceOptional = application.getInstances().stream()
-										.filter((instance) -> {
-											DeployServer deployServer = deployServers.get(server.getServerId());
-											String serviceUrl = instance.getRegistration().getServiceUrl();
-											return serviceUrl.contains(deployServer.getName())
-													|| serviceUrl.contains(deployServer.getIp());
-										}).findFirst();
-
-								return generateDeployInstanceInfo(deployServers.get(server.getServerId()), service,
-										server, instanceOptional);
-							}).collect(Collectors.toList());
-						}
-						else {
-							deployInstancesInfo = deployInstances.stream()
-									.map((server) -> generateDeployInstanceInfo(deployServers.get(server.getServerId()),
-											service, server, Optional.empty()))
-									.collect(Collectors.toList());
-						}
-						return new DeployApplication(service.getId(), service.getName(), service.getJobName(),
-								service.getProjectName(), service.getDeployType(), service.isAutoStart(),
-								service.getBranch(), service.getRollbackBranch(), service.getProfile(),
-								service.getPort(), service.getPath(), service.getEnv(), service.getParameter(),
-								deployInstancesInfo);
-					}).collect(Collectors.toList());
-			return deployApplications;
-		});
-=======
 	public List<ServerInfo> getAllServer() {
 		return deployServers.values().stream().map((server) -> {
 			List<DeployInstanceInfo> deployInstancesInfo = deployInstances.values().stream()
-					.filter((deployInstance) -> deployInstance.getServerId().equals(server.getId()))
-					.map((deployInstance) -> generateDeployInstanceInfo(deployInstance)).collect(Collectors.toList());
+				.filter((deployInstance) -> deployInstance.getServerId().equals(server.getId()))
+				.map((deployInstance) -> generateDeployInstanceInfo(deployInstance)).collect(Collectors.toList());
 
 			Optional<Environment> environment = environmentRepository.findById(server.getEnvironmentId());
 			ServerInfo serverInfo = ServerInfo.fromEntity(server, environment.orElse(new Environment(0L, "默认")));
 			serverInfo.setInstances(deployInstancesInfo);
 			return serverInfo;
 		}).collect(Collectors.toList());
->>>>>>> inmemory
 	}
 
 	public Optional<JenkinsBuild> getBuildInfoById(Long deployId) {
@@ -340,7 +274,7 @@ public class DeployService {
 		operationRepository.save(operation);
 
 		JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
-				jenkinsProperties.getUser(), jenkinsProperties.getPassword());
+			jenkinsProperties.getUser(), jenkinsProperties.getPassword());
 		DeployInstance deployInstance = deployInstances.get(instanceId);
 		if (deployInstance != null) {
 			try {
@@ -442,8 +376,8 @@ public class DeployService {
 					updateDeployBuildId(deployInstance, buildWithDetails.getId());
 
 					jenkinsBuild = new JenkinsBuild(pair.getSecond(), buildWithDetails.isBuilding(),
-							buildWithDetails.getDuration(), buildWithDetails.getEstimatedDuration(),
-							buildWithDetails.getTimestamp());
+						buildWithDetails.getDuration(), buildWithDetails.getEstimatedDuration(),
+						buildWithDetails.getTimestamp());
 				}
 				else {
 					jenkinsBuild = new JenkinsBuild(pair.getSecond(), false, 0, 0, 0);
@@ -460,7 +394,7 @@ public class DeployService {
 	public Pair<Optional<Build>, Boolean> getBuild(String jobName, DeployInstance deployInstance) {
 		try {
 			JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
-					jenkinsProperties.getUser(), jenkinsProperties.getPassword());
+				jenkinsProperties.getUser(), jenkinsProperties.getPassword());
 			JobWithDetails jobWithDetails = jenkinsServer.getJob(jobName);
 			Build build = null;
 			QueueItem queueItem = null;
@@ -514,10 +448,10 @@ public class DeployService {
 	public Long addService(ServiceRequest serviceRequest) {
 		if (serviceRequest.getId() == null || serviceRequest.getId() == 0) {
 			MicroService microService = new MicroService(serviceRequest.getName(), serviceRequest.getJobName(),
-					serviceRequest.getProjectName(), serviceRequest.getDeployType(), serviceRequest.isAutoStart(),
-					serviceRequest.getBranch(), serviceRequest.getRollbackBranch(), serviceRequest.getProfile(),
-					serviceRequest.getPort(), serviceRequest.getPath(), serviceRequest.getEnv(),
-					serviceRequest.getParameter());
+				serviceRequest.getProjectName(), serviceRequest.getDeployType(), serviceRequest.isAutoStart(),
+				serviceRequest.getBranch(), serviceRequest.getRollbackBranch(), serviceRequest.getProfile(),
+				serviceRequest.getPort(), serviceRequest.getPath(), serviceRequest.getEnv(),
+				serviceRequest.getParameter());
 			return microService.getId();
 		}
 		else {
@@ -553,7 +487,7 @@ public class DeployService {
 		else {
 			return microServiceRepository.findById(deployInstanceRequest.getServiceId()).map((microService) -> {
 				DeployInstance deployInstance = new DeployInstance(microService.getId(),
-						deployInstanceRequest.getServerId());
+					deployInstanceRequest.getServerId());
 				deployInstance.setServiceGroup(deployInstanceRequest.getGroup());
 				deployInstance.setBranch(deployInstanceRequest.getBranch());
 				deployInstance.setRollbackBranch(deployInstanceRequest.getRollbackBranch());
@@ -564,71 +498,11 @@ public class DeployService {
 		}
 	}
 
-<<<<<<< HEAD
-	public Mono<List<ServerInfo>> getAllServer() {
-		return registry.getApplications().collectList().map((applications) -> {
-			List<ServerInfo> deployServers = StreamSupport.stream(deployServerRepository.findAll().spliterator(), true)
-					.map((server) -> {
-						List<DeployInstanceInfo> deployInstances;
-						List<DeployInstance> instances = deployInstanceRepository.findByServerId(server.getId());
-						deployInstances = instances.stream().map((instance) -> {
-							MicroService microService = microServiceRepository.findById(instance.getServiceId()).get();
-							Optional<Application> applicationOptional = applications.stream().filter(
-									(application) -> microService.getName().toUpperCase().equals(application.getName()))
-									.findFirst();
-							if (applicationOptional.isPresent()) {
-								Application application = applicationOptional.get();
-								Optional<Instance> instanceOptional = application.getInstances().stream()
-										.filter((eurekaInstance) -> {
-											String serviceUrl = eurekaInstance.getRegistration().getServiceUrl();
-											return serviceUrl.contains(server.getName())
-													|| serviceUrl.contains(server.getIp());
-										}).findFirst();
-								return generateDeployInstanceInfo(server, microService, instance, instanceOptional);
-							}
-							else {
-								return generateDeployInstanceInfo(server, microService, instance, Optional.empty());
-							}
-
-						}).collect(Collectors.toList());
-						Optional<Environment> environment = environmentRepository.findById(server.getEnvironmentId());
-						ServerInfo serverInfo = ServerInfo.fromEntity(server, environment.get());
-						serverInfo.setInstances(deployInstances);
-						return serverInfo;
-					}).collect(Collectors.toList());
-			return deployServers;
-		});
-	}
-
-	private DeployInstanceInfo generateDeployInstanceInfo(DeployServer server, MicroService microService,
-			DeployInstance deployInstance, Optional<Instance> instanceOptional) {
-		Optional<Operation> operationOptional = operationRepository
-				.findFirstByInstanceIdOrderByOpTimeDesc(deployInstance.getId());
-		OperationInfo operationInfo = OperationInfo.fromEntity(operationOptional);
-		StatusInfo statusInfo;
-		String sbaId = null;
-		if (instanceOptional.isPresent()) {
-			statusInfo = instanceOptional.get().getStatusInfo();
-			sbaId = instanceOptional.get().getId().getValue();
-		}
-		else {
-			statusInfo = StatusInfo.valueOf("UNKNOWN");
-		}
-		JenkinsBuild jenkinsBuild = getBuildInfo(microService.getJobName(), deployInstance);
-
-		return new DeployInstanceInfo(deployInstance.getId(), sbaId, microService.getName(), server.getName(),
-				ProtocolSchema + server.getName() + ":" + microService.getPort(), deployInstance.getServiceGroup(),
-				deployInstance.getBranch(), deployInstance.getRollbackBranch(), deployInstance.getProfile(), statusInfo,
-				jenkinsBuild, operationInfo);
-	}
-
-=======
->>>>>>> inmemory
 	public Long addDeployServer(DeployServerRequest deployServerRequest) {
 		if (deployServerRequest.getId() == null || deployServerRequest.getId() == 0) {
 			DeployServer deployServer = new DeployServer(deployServerRequest.getEnvironmentId(),
-					deployServerRequest.getName(), deployServerRequest.getIp(), deployServerRequest.getLoginType(),
-					deployServerRequest.getUser(), deployServerRequest.getPassword());
+				deployServerRequest.getName(), deployServerRequest.getIp(), deployServerRequest.getLoginType(),
+				deployServerRequest.getUser(), deployServerRequest.getPassword());
 			deployServer = deployServerRepository.save(deployServer);
 			return deployServer.getId();
 		}
@@ -650,7 +524,7 @@ public class DeployService {
 		MicroService microService = microServices.get(deployInstance.getServiceId());
 		DeployServer deployServer = deployServers.get(deployInstance.getServerId());
 		Optional<Operation> operationOptional = operationRepository
-				.findFirstByInstanceIdOrderByOpTimeDesc(deployInstance.getId());
+			.findFirstByInstanceIdOrderByOpTimeDesc(deployInstance.getId());
 		OperationInfo operationInfo = OperationInfo.fromEntity(operationOptional);
 		StatusInfo statusInfo;
 		String sbaId = null;
@@ -665,9 +539,9 @@ public class DeployService {
 		JenkinsBuild jenkinsBuild = getBuildInfo(microService.getJobName(), deployInstance);
 
 		return new DeployInstanceInfo(deployInstance.getId(), sbaId, microService.getName(), deployServer.getName(),
-				ProtocolSchema + deployServer.getName() + ":" + microService.getPort(),
-				deployInstance.getServiceGroup(), deployInstance.getBranch(), deployInstance.getRollbackBranch(),
-				deployInstance.getProfile(), statusInfo, jenkinsBuild, operationInfo);
+			ProtocolSchema + deployServer.getName() + ":" + microService.getPort(),
+			deployInstance.getServiceGroup(), deployInstance.getBranch(), deployInstance.getRollbackBranch(),
+			deployInstance.getProfile(), statusInfo, jenkinsBuild, operationInfo);
 	}
 
 	public Mono<Boolean> shutdown(String instanceId, Long deployInstanceId) {
@@ -677,14 +551,14 @@ public class DeployService {
 		URI uri = UriComponentsBuilder.fromPath("/shutdown").build(true).toUri();
 		Mono<Instance> instanceMono = this.instanceRegistry.getInstance(InstanceId.of(instanceId));
 		Mono<ClientResponse> clientResponseMono = instanceWebProxy.forward(instanceMono, uri, HttpMethod.POST,
-				new HttpHeaders(), BodyInserters.empty());
+			new HttpHeaders(), BodyInserters.empty());
 		return clientResponseMono.map((response) -> response.statusCode().equals(HttpStatus.OK));
 	}
 
 	public List<ServerInfo> listServers() {
 		return deployServers.values().stream().map(
-				(deployServer) -> new ServerInfo(deployServer.getId(), deployServer.getName(), deployServer.getIp()))
-				.collect(Collectors.toList());
+			(deployServer) -> new ServerInfo(deployServer.getId(), deployServer.getName(), deployServer.getIp()))
+			.collect(Collectors.toList());
 	}
 
 }

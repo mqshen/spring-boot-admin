@@ -139,19 +139,20 @@ public class DeployService {
 
 		return Flux.from(registry.getInstanceEventPublisher())
 				.flatMap((event) -> this.instanceRegistry.getInstance(event.getInstance())).map((instance) -> {
-					DeployInstanceInfo info = StreamSupport
-							.stream(microServiceRepository.findAll().spliterator(), true).filter(
-									(service) -> service
-											.getName().toUpperCase().equals(instance.getRegistration().getName()))
-							.findFirst().map(
-									(service) -> deployInstanceRepository.findByServiceId(service.getId()).stream()
-											.filter((server) -> instance.getRegistration().getServiceUrl()
-													.contains(deployServers.get(server.getServerId()).getName()))
-											.findFirst()
-											.map((deployInstance) -> generateDeployInstanceInfo(
-													deployServers.get(deployInstance.getServerId()), service,
-													deployInstance, Optional.of(instance)))
-											.orElse(DeployInstanceInfo.empty()))
+					DeployInstanceInfo info = StreamSupport.stream(microServiceRepository.findAll().spliterator(), true)
+							.filter((service) -> service.getName().toUpperCase()
+									.equals(instance.getRegistration().getName()))
+							.findFirst().map((service) -> deployInstanceRepository.findByServiceId(service.getId())
+									.stream().filter((server) -> {
+										DeployServer deployServer = deployServers.get(server.getServerId());
+										String serviceUrl = instance.getRegistration().getServiceUrl();
+										return serviceUrl.contains(deployServer.getName())
+												|| serviceUrl.contains(deployServer.getIp());
+									}).findFirst()
+									.map((deployInstance) -> generateDeployInstanceInfo(
+											deployServers.get(deployInstance.getServerId()), service, deployInstance,
+											Optional.of(instance)))
+									.orElse(DeployInstanceInfo.empty()))
 							.orElse(DeployInstanceInfo.empty());
 					return info;
 				});
@@ -190,9 +191,12 @@ public class DeployService {
 							Application application = applicationOptional.get();
 							deployInstancesInfo = deployInstances.stream().map((server) -> {
 								Optional<Instance> instanceOptional = application.getInstances().stream()
-										.filter((instance) -> instance.getRegistration().getServiceUrl()
-												.contains(deployServers.get(server.getServerId()).getName()))
-										.findFirst();
+										.filter((instance) -> {
+											DeployServer deployServer = deployServers.get(server.getServerId());
+											String serviceUrl = instance.getRegistration().getServiceUrl();
+											return serviceUrl.contains(deployServer.getName())
+													|| serviceUrl.contains(deployServer.getIp());
+										}).findFirst();
 
 								return generateDeployInstanceInfo(deployServers.get(server.getServerId()), service,
 										server, instanceOptional);
@@ -479,10 +483,12 @@ public class DeployService {
 									.findFirst();
 							if (applicationOptional.isPresent()) {
 								Application application = applicationOptional.get();
-								Optional<Instance> instanceOptional = application
-										.getInstances().stream().filter((eurekaInstance) -> eurekaInstance
-												.getRegistration().getServiceUrl().contains(server.getName()))
-										.findFirst();
+								Optional<Instance> instanceOptional = application.getInstances().stream()
+										.filter((eurekaInstance) -> {
+											String serviceUrl = eurekaInstance.getRegistration().getServiceUrl();
+											return serviceUrl.contains(server.getName())
+													|| serviceUrl.contains(server.getIp());
+										}).findFirst();
 								return generateDeployInstanceInfo(server, microService, instance, instanceOptional);
 							}
 							else {

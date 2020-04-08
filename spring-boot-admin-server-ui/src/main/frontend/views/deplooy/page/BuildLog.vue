@@ -4,6 +4,7 @@
     v-model="visible"
     :afterClose="handleClose">
     <div> {{ buildLog }} </div>
+    <a-spin/>
   </a-modal>
 </template>
 

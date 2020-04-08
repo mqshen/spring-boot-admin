@@ -96,7 +96,8 @@
               <a-menu-item> <a>上线</a> </a-menu-item>
               <a-menu-item> <a @click="doShutdown(record)">下线</a> </a-menu-item>
               <a-menu-item> <a @click="doRollback(record)">回滚</a> </a-menu-item>
-              <a-menu-item> <a @click="doSettings(record)">更新配置</a> </a-menu-item>
+              <a-menu-item> <a @click="doSettings(record)">更新设置</a> </a-menu-item>
+              <a-menu-item> <a @click="doRefesh(record)">配置刷新</a> </a-menu-item>
               <a-menu-item> <a @click="showBuildLog(record)">控制台输出</a> </a-menu-item>
             </template>
           </a-menu>
@@ -250,6 +251,9 @@ import Vue from 'vue'
       },
       showBuildLog(instance) {
         this.$refs.logModal.show(instance.id);
+      },
+      doRefesh() {
+        alert('配置刷新成功');
       },
       doSettings(instance) {
         const app = Object.assign({id: instance.id, 

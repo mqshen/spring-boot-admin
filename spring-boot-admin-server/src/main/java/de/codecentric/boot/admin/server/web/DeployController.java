@@ -19,6 +19,7 @@ package de.codecentric.boot.admin.server.web;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import de.codecentric.boot.admin.server.domain.DeployInstance;
 import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
 import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
@@ -60,7 +62,7 @@ public class DeployController {
 	}
 
 	@GetMapping(path = "/deploy", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Mono<List<DeployApplication>> applications() {
+	public List<DeployApplication> applications() {
 		return deployService.getAllApplication();
 	}
 
@@ -128,13 +130,18 @@ public class DeployController {
 	}
 
 	@GetMapping(path = "/deploy/server", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Mono<List<ServerInfo>> getDeployServer() {
+	public List<ServerInfo> getDeployServer() {
 		return deployService.getAllServer();
 	}
 
 	@PostMapping(path = "/deploy/server", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Long addDeployServer(@RequestBody DeployServerRequest deployServerRequest) {
 		return deployService.addDeployServer(deployServerRequest);
+	}
+
+	@GetMapping(path = "/deploy/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Flux<Optional<DeployInstance>> dorefresh() {
+		return deployService.doRefresh();
 	}
 
 	private static <T> Flux<ServerSentEvent<T>> ping() {

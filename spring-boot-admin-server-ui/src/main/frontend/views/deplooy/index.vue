@@ -102,4 +102,10 @@ export default {
     display: inline-block;
     vertical-align: middle;
 }
+.ant-tabs .ant-tabs-large-bar .ant-tabs-nav-container{
+  font-size:17px;
+}
+.ant-table{
+  font-size: 14.5px;
+}
 </style>

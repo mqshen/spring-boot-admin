@@ -2,6 +2,7 @@
   <a-modal
     :width="1000"
     v-model="visible"
+    @ok="handleSubmit"
     :afterClose="handleClose">
     <div> {{ buildLog }} </div>
     <a-spin/>
@@ -27,6 +28,9 @@ export default {
   },
   methods: {
     handleClose () {
+      this.visible = false
+    },
+    handleSubmit() {
       this.visible = false
     },
     show(instanceId) {

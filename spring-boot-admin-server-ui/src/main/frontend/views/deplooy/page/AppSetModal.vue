@@ -102,7 +102,7 @@ export default {
       this.form.validateFields((err, values) => {
         if (!err) {
           this.deploy.doAddDeployInstance(values).then(() => {
-            this.fetchDeployInfo();
+            this.visible = false;
           });
           window.console.log('Received values of form: ', values)
         }

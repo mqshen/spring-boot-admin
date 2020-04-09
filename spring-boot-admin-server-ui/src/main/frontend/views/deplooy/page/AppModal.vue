@@ -111,7 +111,9 @@ export default {
           window.console.log('Received values of form: ', values)
           const requestParameter = Object.assign({}, values)
           window.console.log('Received values of form: ', requestParameter, this.deploy)
-          this.deploy.doAddService(requestParameter);
+          this.deploy.doAddService(requestParameter).then(() => {
+            this.visible = false;
+          });
         }
       })
     },

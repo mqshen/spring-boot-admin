@@ -82,7 +82,9 @@ export default {
         if (!err) {
           const requestParameter = Object.assign({environmentId: values.environment.id}, values)
           window.console.log('Received values of form: ', requestParameter, this.deploy)
-          this.deploy.doAddDeployServer(requestParameter);
+          this.deploy.doAddDeployServer(requestParameter).then(() => {
+            this.visible = false;
+          });
         } else {
           window.console.log(err);
         }

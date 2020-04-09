@@ -24,3 +24,4 @@ node_modules/
 
 #flattened POMs
 .flattened-pom.xml
+/.metadata/

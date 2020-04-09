@@ -36,12 +36,7 @@
         </a-row>
       </a-form>
     </div>
-    
-    <div class="table-operator">
-      <a-button type="primary" icon="plus" @click="$refs.modal.add()">
-        新建
-      </a-button>
-    </div>
+
     <a-table :columns="columns" :dataSource="applications" :childrenColumnName="childName" :rowKey="(record) => record.name || record.id">
       <span slot="status" slot-scope="text, record">
         <template v-if="record.buildInfo && !(record.buildInfo.queued || record.buildInfo.building)">
@@ -75,7 +70,7 @@
       </span>
       <span slot="action" slot-scope="text, record">
         <template v-if="record.instances">
-          <a>详情</a>
+          <a @click="gotoApplications(record.name)">详情</a>
           <a-divider type="vertical" />
           <a @click="modifyApplication(record)">设置</a>
           <a-divider type="vertical" />
@@ -115,7 +110,7 @@ import Vue from 'vue'
   import AppSetModal from './page/AppSetModal.vue'
   import BuildLog from './page/BuildLog.vue'
   import Deploy from '@/services/deploy'
-  
+
   Vue.filter('operationFilter', function (value) {
     if (value == 0 ) {
       return ''
@@ -189,7 +184,7 @@ import Vue from 'vue'
     }
   ];
 
-  
+
 
   export default {
     props: {
@@ -225,15 +220,21 @@ import Vue from 'vue'
     },
     methods: {
       handleOk () {
-        
+
       },
       handleSOk () {
-        
+
+      },
+      addEvent () {
+        this.$refs.modal.add()
       },
       fetchDeployInfo() {
         this.deploy.fetchDeploy().then((res) =>{
           this.applications = res.data;
         });
+      },
+      gotoApplications(name) {
+        this.$router.push({name: 'applications', query: {q: name}});
       },
       modifyApplication(application) {
         this.$refs.modal.edit(application);
@@ -256,7 +257,7 @@ import Vue from 'vue'
         alert('配置刷新成功');
       },
       doSettings(instance) {
-        const app = Object.assign({id: instance.id, 
+        const app = Object.assign({id: instance.id,
           serviceName: instance.name,
           serverName: instance.server}, instance);
         this.$refs.setModal.edit(app);
@@ -322,6 +323,6 @@ import Vue from 'vue'
           this.processInstance(json, onlyJenkins);
         }
       }
-    } 
+    }
   }
 </script>

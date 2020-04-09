@@ -43,12 +43,7 @@
         </a-row>
       </a-form>
     </div>
-    
-    <div class="table-operator">
-      <a-button type="primary" icon="plus" @click="$refs.modal.add()">
-        新建
-      </a-button>
-    </div>
+
     <a-table :columns="columns" :dataSource="servers" :childrenColumnName="childName" :rowKey="(record) => record.url || record.id">
       <span slot="status" slot-scope="text, record">
         <template v-if="record.buildInfo && !(record.buildInfo.queued || record.buildInfo.building)">
@@ -163,7 +158,10 @@
     },
     methods: {
       handleOk() {
-        
+
+      },
+      addEvent () {
+        this.$refs.modal.add()
       },
       doTest(record) {
         window.console.log(record);
@@ -171,7 +169,6 @@
       modifyServer(record) {
         this.$refs.modal.edit(record);
       }
-    } 
+    }
   }
 </script>
-

@@ -5,8 +5,11 @@
     :activeTabKey="titleKey"
     @tabChange="key => handleTabChange(key, 'titleKey')"
   >
-    <app-tab v-if="titleKey === 'app'" :servers="servers" :deploy="deploy"></app-tab>
-    <server-tab v-else></server-tab>
+    <a-button type="primary" icon="plus" slot="tabBarExtraContent" @click="handleAdd()">
+      {{ titleKey |changeTitle }}
+    </a-button>
+    <app-tab v-if="titleKey === 'app'" :servers="servers" :deploy="deploy" ref="app"></app-tab>
+    <server-tab v-else ref="ser"></server-tab>
   </a-card>
 </template>
 
@@ -45,9 +48,25 @@ export default {
       this.servers = res.data;
     });
   },
+  filters: {
+    changeTitle (key) {
+      const keyMap = {
+        'app': '新建应用',
+        'server': '新建服务器'
+      }
+      return keyMap[key]
+    }
+  },
   methods: {
     handleTabChange (key, type) {
       this[type] = key
+    },
+    handleAdd () {
+      if (this.titleKey === 'app') {
+        this.$refs.app.addEvent()
+      } else {
+        this.$refs.ser.addEvent()
+      }
     }
   },
   install({viewRegistry}) {

@@ -318,16 +318,23 @@ import Vue from 'vue'
       },
       doRollback(instance) {
         instance.buildInfo.building = true;
-        this.deploy.doRollback(instance.id).then(() =>{
-          setTimeout(() => this.queryBuilding(instance), 3000);
-        });
+        this.deploy.doRollback(instance.id)
       },
-      doBuild(instance) {
+      doStart(instance) {
         instance.buildInfo.building = true;
-        this.deploy.doBuild(instance.id)
-        // .then(() =>{
-        //    setTimeout(() => this.queryBuilding(instance), 3000);
-        // });
+        this.deploy.doStart(instance.id)
+      }, 
+      doBuild(instance) {
+        if (instance.instances) {
+          instance.instances.forEach((instance) =>{
+            instance.buildInfo.building = true;
+          });
+          const instanceIds = instance.instances.map((instance) => instance.id);
+          this.deploy.doBuild(instanceIds)
+        } else {
+          instance.buildInfo.building = true;
+          this.deploy.doBuild(instance.id)
+        }
       }, 
       showDisplay(id, list) {
         const item = list.find((item) => {return item.id == id});

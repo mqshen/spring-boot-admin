@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.PostConstruct;
@@ -64,6 +65,7 @@ import de.codecentric.boot.admin.server.domain.OperationType;
 import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
 import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
+import de.codecentric.boot.admin.server.domain.values.BuildRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
 import de.codecentric.boot.admin.server.domain.values.EnvironmentInfo;
@@ -265,11 +267,59 @@ public class DeployService {
 	}
 
 	public String startBuild(Long deployId) throws URISyntaxException {
-		return startBuild(deployId, false);
+		return startBuild(deployId, false, false);
 	}
 
-	public String startBuild(Long instanceId, boolean rollback) throws URISyntaxException {
-		// jenkinsService.startListener(instanceId);
+	public String start(Long deployId) throws URISyntaxException {
+		return startBuild(deployId, false, true);
+	}
+
+	public String startBuild(BuildRequest request) throws URISyntaxException {
+		List<Operation> operations = request.getInstances().stream().map((instanceId) ->
+			new Operation(instanceId, OperationType.DEPLOY)
+		).collect(Collectors.toList());
+		operationRepository.saveAll(operations);
+
+		JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
+			jenkinsProperties.getUser(), jenkinsProperties.getPassword());
+		Map<String, String> param = new HashMap<>(); // service.getMetadata();
+		DeployInstance deployInstance = deployInstances.get(request.getInstances().get(0));
+		if (deployInstance != null) {
+			MicroService microService = microServices.get(deployInstance.getServiceId());
+			param.put("projectName", microService.getProjectName());
+			param.put("branch", microService.getBranch());
+			param.put("onlyStart", "false");
+			param.put("deployPath", microService.getPath());
+			param.put("profile", microService.getProfile());
+			param.put("port", String.valueOf(microService.getPort()));
+
+
+			Stream<Pair<String, String>> stream = request.getInstances().stream().map((instanceId) -> {
+				DeployInstance instance = deployInstances.get(instanceId);
+				if (instance != null) {
+					DeployServer deployServer = deployServers.get(deployInstance.getServerId());
+					return Pair.of(deployServer.getIp(), deployServer.getUser());
+				}
+				return Pair.of("", "");
+			}).filter((item) -> item.getFirst().length() > 0);
+			String ips = stream.map((x) -> x.getFirst()).collect(Collectors.joining(","));
+			String users = stream.map((x) -> x.getSecond()).collect(Collectors.joining(","));
+			param.put("server", ips);
+			param.put("userName", users);
+			try {
+				String itemUrl = sendBuild(microService.getJobName(), param);
+				deployInstance.setQueueId(itemUrl);
+				deployInstanceRepository.save(deployInstance);
+			}
+			catch (IOException ex) {
+				LOGGER.error("error push job to jenkins", ex);
+			}
+		}
+
+
+	}
+
+	public String startBuild(Long instanceId, boolean rollback, boolean onlyStart) throws URISyntaxException {
 
 		Operation operation;
 		if (rollback) {
@@ -280,18 +330,15 @@ public class DeployService {
 		}
 		operationRepository.save(operation);
 
-		JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
-				jenkinsProperties.getUser(), jenkinsProperties.getPassword());
 		DeployInstance deployInstance = deployInstances.get(instanceId);
 		if (deployInstance != null) {
 			try {
 				MicroService microService = microServices.get(deployInstance.getServiceId());
-				JobWithDetails jobWithDetails = jenkinsServer.getJob(microService.getJobName());
 
 				Map<String, String> param = new HashMap<>(); // service.getMetadata();
 				param.put("projectName", microService.getProjectName());
 				DeployServer deployServer = deployServers.get(deployInstance.getServerId());
-				param.put("server", deployServer.getName());
+				param.put("server", deployServer.getIp());
 				param.put("userName", deployServer.getUser());
 
 				if (rollback) {
@@ -311,6 +358,13 @@ public class DeployService {
 					}
 				}
 
+				if (onlyStart) {
+					param.put("onlyStart", "true");
+				}
+				else {
+					param.put("onlyStart", "false");
+				}
+
 				if (deployInstance.getProfile() != null) {
 					param.put("profile", deployInstance.getProfile());
 				}
@@ -321,17 +375,7 @@ public class DeployService {
 				param.put("port", String.valueOf(microService.getPort()));
 				param.put("deployPath", microService.getPath());
 
-				if (eurekaAddress != null) {
-					int index = eurekaAddress.indexOf("/eureka");
-					String eurekaUrl = eurekaAddress;
-					if (index > 0) {
-						eurekaUrl = eurekaAddress.substring(0, index);
-					}
-					param.put("eurekaAddress", eurekaUrl);
-				}
-
-				QueueReference reference = jobWithDetails.build(param, true);
-				String itemUrl = reference.getQueueItemUrlPart();
+				String itemUrl = sendBuild(microService.getJobName(), param);
 				deployInstance.setQueueId(itemUrl);
 				deployInstanceRepository.save(deployInstance);
 				return itemUrl;
@@ -341,6 +385,23 @@ public class DeployService {
 			}
 		}
 		return "";
+	}
+
+	protected String sendBuild(String jobName, Map<String, String> param) throws IOException, URISyntaxException {
+		if (eurekaAddress != null) {
+			int index = eurekaAddress.indexOf("/eureka");
+			String eurekaUrl = eurekaAddress;
+			if (index > 0) {
+				eurekaUrl = eurekaAddress.substring(0, index);
+			}
+			param.put("eurekaAddress", eurekaUrl);
+		}
+		JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
+			jenkinsProperties.getUser(), jenkinsProperties.getPassword());
+
+		JobWithDetails jobWithDetails = jenkinsServer.getJob(jobName);
+		QueueReference reference = jobWithDetails.build(param, true);
+		return reference.getQueueItemUrlPart();
 	}
 
 	public boolean stopBuild(Long deployId) {

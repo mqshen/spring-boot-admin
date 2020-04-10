@@ -38,8 +38,16 @@ class Deploy{
         return this.axios.post(uri`deploy/shutdown`, shutdownRequest);
     }
 
+    async doStart(deployId) {
+        return this.axios.post(uri`deploy/start/${deployId}`);
+    }
+
     async doBuild(deployId) {
-        return this.axios.post(uri`deploy/build/${deployId}`);
+        if (deployId instanceof Array) {
+            return this.axios.post(uri`deploy/buildAll`, {instances: deployId});
+        } else {
+            return this.axios.post(uri`deploy/build/${deployId}`);
+        }
     }
 
     async doRollback(deployId) {

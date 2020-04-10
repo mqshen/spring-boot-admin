@@ -18,6 +18,18 @@ class Deploy{
         return this.axios.get(uri`deploy/list/servers`);
     }
 
+    async listEnvironments() {
+        return this.axios.get(uri`deploy/environments`);
+    }
+
+    async listGroups() {
+        return this.axios.get(uri`deploy/groups`);
+    }
+
+    async listInstacne() {
+        return this.axios.get(uri`deploy/list/instances`);
+    }
+
     async queryServers() {
         return this.axios.get(uri`deploy/server`);
     }

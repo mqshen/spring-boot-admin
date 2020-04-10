@@ -17,6 +17,7 @@
 package de.codecentric.boot.admin.server.domain.values;
 
 import de.codecentric.boot.admin.server.domain.Environment;
+import de.codecentric.boot.admin.server.domain.Group;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,13 +25,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EnvironmentInfo {
+public class GroupInfo {
 
 	Long id;
 
 	String name;
 
-	static public EnvironmentInfo fromEntity(Environment environment) {
-		return new EnvironmentInfo(environment.getId(), environment.getName());
+	static public GroupInfo fromEntity(Group group) {
+		return new GroupInfo(group.getId(), group.getName());
 	}
 }

@@ -66,6 +66,8 @@ import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
+import de.codecentric.boot.admin.server.domain.values.EnvironmentInfo;
+import de.codecentric.boot.admin.server.domain.values.GroupInfo;
 import de.codecentric.boot.admin.server.domain.values.InstanceId;
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.domain.values.OperationInfo;
@@ -75,6 +77,7 @@ import de.codecentric.boot.admin.server.domain.values.StatusInfo;
 import de.codecentric.boot.admin.server.repositories.DeployInstanceRepository;
 import de.codecentric.boot.admin.server.repositories.DeployServerRepository;
 import de.codecentric.boot.admin.server.repositories.EnvironmentRepository;
+import de.codecentric.boot.admin.server.repositories.GroupRepository;
 import de.codecentric.boot.admin.server.repositories.MicroServiceRepository;
 import de.codecentric.boot.admin.server.repositories.OperationRepository;
 import de.codecentric.boot.admin.server.web.InstanceWebProxy;
@@ -106,6 +109,9 @@ public class DeployService {
 
 	@Autowired
 	private EnvironmentRepository environmentRepository;
+
+	@Autowired
+	private GroupRepository groupRepository;
 
 	@Autowired
 	private OperationRepository operationRepository;
@@ -228,10 +234,9 @@ public class DeployService {
 
 	public List<DeployApplication> getAllApplication() {
 		return microServices.values().stream().map((service) -> {
-			List<DeployInstanceInfo> deployInstancesInfo;
-			deployInstancesInfo = deployInstances.values().stream()
+			List<Long> deployInstancesInfo = deployInstances.values().stream()
 					.filter((deployInstance) -> deployInstance.getServiceId().equals(service.getId()))
-					.map((deployInstance) -> generateDeployInstanceInfo(deployInstance)).collect(Collectors.toList());
+					.map((deployInstance) -> deployInstance.getId()).collect(Collectors.toList());
 
 			return new DeployApplication(service.getId(), service.getName(), service.getJobName(),
 					service.getProjectName(), service.getDeployType(), service.isAutoStart(), service.getBranch(),
@@ -242,13 +247,13 @@ public class DeployService {
 
 	public List<ServerInfo> getAllServer() {
 		return deployServers.values().stream().map((server) -> {
-			List<DeployInstanceInfo> deployInstancesInfo = deployInstances.values().stream()
+			List<Long> deployInstancesInfo = deployInstances.values().stream()
 					.filter((deployInstance) -> deployInstance.getServerId().equals(server.getId()))
-					.map((deployInstance) -> generateDeployInstanceInfo(deployInstance)).collect(Collectors.toList());
+					.map((deployInstance) -> deployInstance.getId()).collect(Collectors.toList());
 
 			Optional<Environment> environment = environmentRepository.findById(server.getEnvironmentId());
 			ServerInfo serverInfo = ServerInfo.fromEntity(server, environment.orElse(new Environment(0L, "默认")));
-			serverInfo.setInstances(deployInstancesInfo);
+			serverInfo.setChildren(deployInstancesInfo);
 			return serverInfo;
 		}).collect(Collectors.toList());
 	}
@@ -564,4 +569,20 @@ public class DeployService {
 				.collect(Collectors.toList());
 	}
 
+	public List<DeployInstanceInfo> listInstance() {
+		return deployInstances.values().stream().map((deployInstance) -> generateDeployInstanceInfo(deployInstance))
+			.collect(Collectors.toList());
+	}
+
+	public List<EnvironmentInfo> listEnvironments() {
+		return StreamSupport.stream(environmentRepository.findAll().spliterator(), true)
+			.map((environment) -> EnvironmentInfo.fromEntity(environment))
+			.collect(Collectors.toList());
+	}
+
+	public List<GroupInfo> listGroup() {
+		return StreamSupport.stream(groupRepository.findAll().spliterator(), true)
+			.map((group) -> GroupInfo.fromEntity(group))
+			.collect(Collectors.toList());
+	}
 }

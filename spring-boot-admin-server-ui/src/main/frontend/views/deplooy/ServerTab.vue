@@ -136,7 +136,7 @@
     props: {
       deploy: {
         type: Deploy,
-        default: () => new Deploy(),
+        required: true
       },
     },
     data() {
@@ -153,7 +153,14 @@
     },
     mounted() {
       this.deploy.queryServers().then((res) =>{
-        this.servers = res.data;
+        const servers = res.data.map((server) => {
+          const instances = server.children.map((id) => {
+            return this.instances.find((instance) => {return instance.id == id});
+          })
+          server.instances = instances;
+          return server;
+        })
+        this.servers = servers;
       });
     },
     methods: {

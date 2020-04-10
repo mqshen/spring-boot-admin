@@ -14,23 +14,12 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.domain.values;
+package de.codecentric.boot.admin.server.repositories;
 
-import de.codecentric.boot.admin.server.domain.Environment;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.data.repository.CrudRepository;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class EnvironmentInfo {
+import de.codecentric.boot.admin.server.domain.Group;
 
-	Long id;
+public interface GroupRepository extends CrudRepository<Group, Long> {
 
-	String name;
-
-	static public EnvironmentInfo fromEntity(Environment environment) {
-		return new EnvironmentInfo(environment.getId(), environment.getName());
-	}
 }

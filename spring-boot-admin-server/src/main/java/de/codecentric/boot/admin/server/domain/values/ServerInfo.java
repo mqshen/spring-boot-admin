@@ -44,7 +44,7 @@ public class ServerInfo {
 
 	String user;
 
-	List<DeployInstanceInfo> instances;
+	List<Long> children;
 
 	public ServerInfo(Long id, String name, String ip) {
 		this.id = id;

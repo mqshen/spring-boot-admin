@@ -36,9 +36,7 @@
         
         <a-form-item v-bind="formItemLay" label="分组">
           <a-radio-group v-decorator="['group']">
-            <a-radio :value="1">默认</a-radio>
-            <a-radio :value="2">灰度</a-radio>
-            <a-radio :value="3">灰度2</a-radio>
+            <a-radio v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</a-radio>
           </a-radio-group>
         </a-form-item>
         <a-form-item v-bind="formItemLay" label="部署分支">

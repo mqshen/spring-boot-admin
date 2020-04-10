@@ -7,22 +7,20 @@
             <a-form-item label="环境">
               <a-select v-model="queryParam.eve" placeholder="请选择" default-value="0" class="ifp-selector">
                 <a-select-option value="0"> 全部 </a-select-option>
-                <a-select-option value="1"> POC </a-select-option>
-                <a-select-option value="2"> PREVIEW </a-select-option>
+                <a-select-option v-for="environment in environments" :key="environment.id" :value="environment.id">{{ environment.name }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
           <a-col :md="7" :sm="24">
             <a-form-item label="应用ID">
-              <a-input v-model="queryParam.server" placeholder="输入应用ID关键字" />
+              <a-input v-model="queryParam.service" placeholder="输入应用ID关键字" />
             </a-form-item>
           </a-col>
           <a-col :md="7" :sm="24">
             <a-form-item label="分组">
               <a-select v-model="queryParam.group" placeholder="请选择" default-value="0">
                 <a-select-option value="0"> 全部 </a-select-option>
-                <a-select-option value="userCenter"> userCenter </a-select-option>
-                <a-select-option value="customCenter"> customCenter </a-select-option>
+                <a-select-option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
@@ -60,6 +58,13 @@
           {{ text }}
         </template>
       </span>
+
+      <span slot="group" slot-scope="text">
+        <template v-if="text">
+          {{ showDisplay(text, groups) }}
+        </template>
+      </span>
+
       <span slot="server" slot-scope="text, record">
         <template v-if="record.instances">
           {{ record.instances.length }}
@@ -101,7 +106,7 @@
     </a-table>
     <app-modal ref="modal" @ok="handleOk" :deploy="deploy"/>
     <build-log ref="logModal" @ok="handleOk" :deploy="deploy"/>
-    <app-set-modal ref="setModal" @ok="handleSOk" :servers="servers"/>
+    <app-set-modal ref="setModal" @ok="handleSOk" :servers="servers" :group="grpup"/>
   </div>
 </template>
 <script>
@@ -163,6 +168,7 @@ import Vue from 'vue'
     {
       title: '分组',
       dataIndex: 'group',
+      scopedSlots: {customRender: 'group'}
     },
     {
       title: '运行状态',
@@ -192,9 +198,21 @@ import Vue from 'vue'
         type: Deploy,
         default: () => new Deploy(),
       },
+      groups: {
+        type: Array,
+        default: () => [],
+      },
+      environments: {
+        type: Array,
+        default: () => [],
+      },
       servers: {
         type: Array,
         default: () => [],
+      },
+      instances: {
+        type: Array,
+        required: true
       }
     },
     components: {
@@ -206,17 +224,17 @@ import Vue from 'vue'
       return {
         childName: 'instances',
         applications: [],
+        allApplications: [],
         columns,
         queryParam:{
           eve: '',
-          server: '',
+          service: '',
           group: ''
         }
       }
     },
     mounted() {
       this.fetchDeployInfo();
-      this.onChange();
     },
     methods: {
       handleOk () {
@@ -229,9 +247,41 @@ import Vue from 'vue'
         this.$refs.modal.add()
       },
       fetchDeployInfo() {
-        this.deploy.fetchDeploy().then((res) =>{
-          this.applications = res.data;
+        this.deploy.fetchDeploy().then((res) => {
+          const applications = res.data.map((application) => {
+            const instances = application.children.map((id) => {
+              return this.instances.find((instance) => {return instance.id == id});
+            })
+            application.instances = instances;
+            return application;
+          })
+          this.allApplications = applications;
+          this.filterApplications();
         });
+      },
+      filterApplications() {
+        const applications = allApplications.filter((application) => {
+          if(this.queryParam.service) {
+            return application.name.includes(this.queryParam.service);
+          }
+          return true;
+        }).map((application) => {
+          const instances = application.instances.filter((instance) => {
+            if (this.queryParam.eve) {
+              if (instance.environment != this.queryParam.eve)
+                return false;
+            }
+            if (this.queryParam.group) {
+              if (instance.group != this.queryParam.group)
+                return false;
+            }
+            return true;
+          })
+          const app = Object.assign({}, application)
+          app.instances = instances;
+          return app;
+        })
+        this.applications = applications;
       },
       gotoApplications(name) {
         this.$router.push({name: 'applications', query: {q: name}});
@@ -280,48 +330,12 @@ import Vue from 'vue'
         // .then(() =>{
         //    setTimeout(() => this.queryBuilding(instance), 3000);
         // });
-      },
-      onChange() {
-          const eventSource = new EventSource('deploy');
-          eventSource.onmessage = (message) => {
-            this.transformResponse(message.data, false)
-          }
-          eventSource.onerror = (err) => {
-            window.console.log(err);
-          }
-          // const jenkinsEventSource = new EventSource('deploy/jenkins');
-          // jenkinsEventSource.onmessage = (message) => {
-          //   this.transformResponse(message.data, true)
-          // }
-          // jenkinsEventSource.onerror = (err) => {
-          //   window.console.log(err);
-          // }
-      },
-      processInstance(data, onlyJenkins) {
-        this.applications.forEach((application) => {
-          for(var i = 0; i < application.instances.length; ++i) {
-            if (application.instances[i].id == data.id) {
-              if (onlyJenkins) {
-                Object.assign(application.instances[i].buildInfo, data.buildInfo);
-              } else {
-                Object.assign(application.instances[i], data);
-              }
-            }
-          }
-        });
-      },
-      transformResponse(data, onlyJenkins) {
-        if (!data) {
-          return data;
-        }
-        const json = JSON.parse(data);
-        if (json instanceof Array) {
-          json.forEach((instance) => {
-            this.processInstance(instance, onlyJenkins);
-          });
-        } else {
-          this.processInstance(json, onlyJenkins);
-        }
+      }, 
+      showDisplay(id, list) {
+        const item = list.find((item) => {return item.id == id});
+        if (item) 
+          return item.name;
+        return ''
       }
     }
   }

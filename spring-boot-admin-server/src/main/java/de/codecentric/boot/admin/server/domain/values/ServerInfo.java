@@ -34,7 +34,7 @@ public class ServerInfo {
 
 	Long id;
 
-	EnvironmentInfo environment;
+	Long environmentId;
 
 	String name;
 
@@ -52,17 +52,17 @@ public class ServerInfo {
 		this.ip = ip;
 	}
 
-	public ServerInfo(Long id, EnvironmentInfo environment, String name, String ip, LoginType loginType, String user) {
+	public ServerInfo(Long id, Long environmentId, String name, String ip, LoginType loginType, String user) {
 		this.id = id;
-		this.environment = environment;
+		this.environmentId = environmentId;
 		this.name = name;
 		this.ip = ip;
 		this.loginType = loginType;
 		this.user = user;
 	}
 
-	public static ServerInfo fromEntity(DeployServer server, Environment environment) {
-		return new ServerInfo(server.getId(), new EnvironmentInfo(server.getEnvironmentId(), environment.getName()),
+	public static ServerInfo fromEntity(DeployServer server) {
+		return new ServerInfo(server.getId(), server.getEnvironmentId(),
 				server.getName(), server.getIp(), server.getLoginType(), server.getUser());
 	}
 

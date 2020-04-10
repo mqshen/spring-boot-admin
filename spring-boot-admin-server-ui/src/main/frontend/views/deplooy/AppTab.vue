@@ -5,28 +5,28 @@
         <a-row :gutter="48">
           <a-col :md="7" :sm="24">
             <a-form-item label="环境">
-              <a-select v-model="queryParam.eve" placeholder="请选择" default-value="0" class="ifp-selector">
-                <a-select-option value="0"> 全部 </a-select-option>
+              <a-select v-model="queryParam.eve" placeholder="请选择" default-value="0" class="ifp-selector"  >
+                <a-select-option :value="-1"> 全部 </a-select-option>
                 <a-select-option v-for="environment in environments" :key="environment.id" :value="environment.id">{{ environment.name }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
           <a-col :md="7" :sm="24">
             <a-form-item label="应用ID">
-              <a-input v-model="queryParam.service" placeholder="输入应用ID关键字" />
+              <a-input v-model="queryParam.service" placeholder="输入应用ID关键字"  />
             </a-form-item>
           </a-col>
           <a-col :md="7" :sm="24">
             <a-form-item label="分组">
-              <a-select v-model="queryParam.group" placeholder="请选择" default-value="0">
-                <a-select-option value="0"> 全部 </a-select-option>
+              <a-select v-model="queryParam.group" placeholder="请选择" default-value="0" >
+                <a-select-option :value="-1"> 全部 </a-select-option>
                 <a-select-option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
           <a-col :md="3" :sm="12">
             <span class="table-page-search-submitButtons">
-              <a-button type="primary">
+              <a-button type="primary" @click="filterApplications">
                 查询
               </a-button>
             </span>
@@ -35,7 +35,7 @@
       </a-form>
     </div>
 
-    <a-table :columns="columns" :dataSource="applications" :childrenColumnName="childName" :rowKey="(record) => record.name || record.id">
+    <a-table :columns="columns" :dataSource="applications" :childrenColumnName="childName" :rowKey="(record) => record.instances ? record.id : record.sbaId">
       <span slot="status" slot-scope="text, record">
         <template v-if="record.buildInfo && !(record.buildInfo.queued || record.buildInfo.building)">
           {{ record.statusInfo.status }}
@@ -70,33 +70,30 @@
           {{ record.instances.length }}
         </template>
         <template v-else>
-          {{ text }}
+          {{ showDisplay(text, servers) }}
         </template>
       </span>
       <span slot="action" slot-scope="text, record">
         <template v-if="record.instances">
           <a @click="gotoApplications(record.name)">详情</a>
           <a-divider type="vertical" />
-          <a @click="modifyApplication(record)">设置</a>
-          <a-divider type="vertical" />
         </template>
         <template v-else>
-          <a @click="doBuild(record)">部署</a>
-          <a-divider type="vertical" />
         </template>
+        <a @click="doBuild(record)">部署</a>
+        <a-divider type="vertical" />
+        <a @click="modifyApplication(record)">设置</a>
+        <a-divider type="vertical" />
         <a-dropdown>
-          <a class="ant-dropdown-link">
-            更多 <a-icon type="down" />
-          </a>
+          <a class="ant-dropdown-link"> 更多 <a-icon type="down" /></a>
           <a-menu slot="overlay">
             <template v-if="record.instances">
               <a-menu-item> <a @click="addServer(record)">新添服务器</a> </a-menu-item>
             </template>
             <template v-else>
-              <a-menu-item> <a>上线</a> </a-menu-item>
+              <a-menu-item> <a @click="doStart(redord)">上线</a> </a-menu-item>
               <a-menu-item> <a @click="doShutdown(record)">下线</a> </a-menu-item>
               <a-menu-item> <a @click="doRollback(record)">回滚</a> </a-menu-item>
-              <a-menu-item> <a @click="doSettings(record)">更新设置</a> </a-menu-item>
               <a-menu-item> <a @click="doRefesh(record)">配置刷新</a> </a-menu-item>
               <a-menu-item> <a @click="showBuildLog(record)">控制台输出</a> </a-menu-item>
             </template>
@@ -162,7 +159,7 @@ import Vue from 'vue'
     },
     {
       title: '实例（服务器）',
-      dataIndex: 'server',
+      dataIndex: 'serverId',
       scopedSlots: {customRender: 'server'}
     },
     {
@@ -227,9 +224,9 @@ import Vue from 'vue'
         allApplications: [],
         columns,
         queryParam:{
-          eve: '',
+          eve: -1,
           service: '',
-          group: ''
+          group: -1 
         }
       }
     },
@@ -248,38 +245,38 @@ import Vue from 'vue'
       },
       fetchDeployInfo() {
         this.deploy.fetchDeploy().then((res) => {
-          const applications = res.data.map((application) => {
-            const instances = application.children.map((id) => {
-              return this.instances.find((instance) => {return instance.id == id});
-            })
-            application.instances = instances;
-            return application;
-          })
-          this.allApplications = applications;
+          this.allApplications = res.data;
           this.filterApplications();
         });
       },
       filterApplications() {
-        const applications = allApplications.filter((application) => {
+        var mathServer = this.servers;
+        if (this.queryParam.eve && this.queryParam.eve > 0) {
+          mathServer = this.servers.filter((server) => {return server.environmentId == this.queryParam.eve;});
+        }
+        window.console.log(mathServer.map((x) => x.id));
+        const applications = this.allApplications.filter((application) => {
           if(this.queryParam.service) {
             return application.name.includes(this.queryParam.service);
           }
           return true;
         }).map((application) => {
-          const instances = application.instances.filter((instance) => {
-            if (this.queryParam.eve) {
-              if (instance.environment != this.queryParam.eve)
+          const instances = application.children.map((id) => {
+            return this.instances.find((instance) => {return instance.id == id});
+          }).filter((instance) => {
+            if (this.queryParam.eve && this.queryParam.eve > 0) {
+              const found = mathServer.filter((server) => {window.console.log(instance.serverId);return server.id == instance.serverId}).length;
+              if (found == 0)
                 return false;
             }
-            if (this.queryParam.group) {
+            if (this.queryParam.group && this.queryParam.group > 0) {
               if (instance.group != this.queryParam.group)
                 return false;
             }
             return true;
-          })
-          const app = Object.assign({}, application)
-          app.instances = instances;
-          return app;
+          });
+          application.instances = instances;
+          return application;
         })
         this.applications = applications;
       },
@@ -287,7 +284,14 @@ import Vue from 'vue'
         this.$router.push({name: 'applications', query: {q: name}});
       },
       modifyApplication(application) {
-        this.$refs.modal.edit(application);
+        if(application.instances) {
+          this.$refs.modal.edit(application);
+        } else {
+          const app = Object.assign({id: instance.id,
+          serviceName: instance.name,
+          serverName: instance.server}, instance);
+          this.$refs.setModal.edit(app);
+        }
       },
       queryBuilding(instance) {
         this.deploy.queryDetail(instance.id).then((res) =>{
@@ -305,12 +309,6 @@ import Vue from 'vue'
       },
       doRefesh() {
         alert('配置刷新成功');
-      },
-      doSettings(instance) {
-        const app = Object.assign({id: instance.id,
-          serviceName: instance.name,
-          serverName: instance.server}, instance);
-        this.$refs.setModal.edit(app);
       },
       doShutdown(instance) {
         const shutdownRequest = {'instanceId': instance.sbaId, 'deployInstanceId': instance.id};

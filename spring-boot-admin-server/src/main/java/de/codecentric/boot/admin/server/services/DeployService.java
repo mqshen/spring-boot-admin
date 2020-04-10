@@ -251,8 +251,7 @@ public class DeployService {
 					.filter((deployInstance) -> deployInstance.getServerId().equals(server.getId()))
 					.map((deployInstance) -> deployInstance.getId()).collect(Collectors.toList());
 
-			Optional<Environment> environment = environmentRepository.findById(server.getEnvironmentId());
-			ServerInfo serverInfo = ServerInfo.fromEntity(server, environment.orElse(new Environment(0L, "默认")));
+			ServerInfo serverInfo = ServerInfo.fromEntity(server);
 			serverInfo.setChildren(deployInstancesInfo);
 			return serverInfo;
 		}).collect(Collectors.toList());
@@ -546,7 +545,7 @@ public class DeployService {
 		}
 		JenkinsBuild jenkinsBuild = getBuildInfo(microService.getJobName(), deployInstance);
 
-		return new DeployInstanceInfo(deployInstance.getId(), sbaId, microService.getName(), deployServer.getName(),
+		return new DeployInstanceInfo(deployInstance.getId(), sbaId, microService.getName(), deployInstance.getServerId(),
 				ProtocolSchema + deployServer.getName() + ":" + microService.getPort(),
 				deployInstance.getServiceGroup(), deployInstance.getBranch(), deployInstance.getRollbackBranch(),
 				deployInstance.getProfile(), statusInfo, jenkinsBuild, operationInfo);
@@ -565,7 +564,7 @@ public class DeployService {
 
 	public List<ServerInfo> listServers() {
 		return deployServers.values().stream().map(
-				(deployServer) -> new ServerInfo(deployServer.getId(), deployServer.getName(), deployServer.getIp()))
+				(deployServer) -> ServerInfo.fromEntity(deployServer))
 				.collect(Collectors.toList());
 	}
 

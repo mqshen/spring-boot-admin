@@ -35,7 +35,7 @@ public class DeployInstanceInfo {
 
 	private String name;
 
-	private String server;
+	private Long serverId;
 
 	private String url;
 

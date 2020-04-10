@@ -6,36 +6,23 @@
           <a-col :md="7" :sm="24">
             <a-form-item label="环境">
               <a-select v-model="queryParam.eve" placeholder="请选择" default-value="0" class="ifp-selector">
-                <a-select-option :value="0">
-                  全部
-                </a-select-option>
-                <a-select-option :value="1">
-                  POC
-                </a-select-option>
-                <a-select-option :value="2">
-                  PREVIEW
-                </a-select-option>
+                <a-select-option :value="-1"> 全部 </a-select-option>
+                <a-select-option v-for="environment in environments" :key="environment.id" :value="environment.id">{{ environment.name }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
           <a-col :md="7" :sm="24">
             <a-form-item label="数据中心">
               <a-select v-model="queryParam.group" placeholder="请选择" default-value="0">
-                <a-select-option value="0">
-                  全部
-                </a-select-option>
-                <a-select-option value="userCenter">
-                  userCenter
-                </a-select-option>
-                <a-select-option value="customCenter">
-                  customCenter
-                </a-select-option>
+                <a-select-option :value="-1"> 全部 </a-select-option>
+                <a-select-option value="userCenter"> userCenter </a-select-option>
+                <a-select-option value="customCenter"> customCenter </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
           <a-col :md="3" :sm="12">
             <span class="table-page-search-submitButtons">
-              <a-button type="primary">
+              <a-button type="primary" @click="filterServer">
                 查询
               </a-button>
             </span>
@@ -44,7 +31,7 @@
       </a-form>
     </div>
 
-    <a-table :columns="columns" :dataSource="servers" :childrenColumnName="childName" :rowKey="(record) => record.url || record.id">
+    <a-table :columns="columns" :dataSource="serverInstances" :childrenColumnName="childName" :rowKey="(record) => record.url || record.id">
       <span slot="status" slot-scope="text, record">
         <template v-if="record.buildInfo && !(record.buildInfo.queued || record.buildInfo.building)">
           {{ record.statusInfo.status }}
@@ -73,9 +60,9 @@
           {{ record.url }}
         </template>
       </span>
-      <span slot="recordInfo" slot-scope="text, record">
-        <template v-if="record.environment">
-          {{ record.environment.name }}
+      <span slot="recordInfo" slot-scope="text">
+        <template v-if="text">
+          {{ showDisplay(text, environments) }}
         </template>
       </span>
       <span slot="action" slot-scope="text, record">
@@ -117,7 +104,7 @@
     },
     {
       title: '环境',
-      dataIndex: 'environment',
+      dataIndex: 'environmentId',
       width: '10%',
       scopedSlots: {customRender: 'recordInfo'}
     },
@@ -138,16 +125,33 @@
         type: Deploy,
         required: true
       },
+      groups: {
+        type: Array,
+        default: () => [],
+      },
+      environments: {
+        type: Array,
+        default: () => [],
+      },
+      servers: {
+        type: Array,
+        default: () => [],
+      },
+      instances: {
+        type: Array,
+        required: true
+      }
     },
     data() {
       return {
         childName: 'instances',
-        servers: [],
+        serverInstances: [],
+        allServers: [],
         columns,
         queryParam:{
-          eve: 0,
+          eve: -1,
           server: '',
-          group: ''
+          group: -1
         }
       }
     },
@@ -160,7 +164,8 @@
           server.instances = instances;
           return server;
         })
-        this.servers = servers;
+        this.allServers = servers;
+        this.filterServer();
       });
     },
     methods: {
@@ -175,7 +180,22 @@
       },
       modifyServer(record) {
         this.$refs.modal.edit(record);
-      }
+      },
+      showDisplay(id, list) {
+        const item = list.find((item) => {return item.id == id});
+        if (item) 
+          return item.name;
+        return ''
+      },
+      filterServer() {
+        const servers = this.allServers.filter((server) => {
+          if(this.queryParam.eve && this.queryParam.eve > 0) {
+            return server.environmentId == this.queryParam.eve;
+          }
+          return true;
+        });
+        this.serverInstances = servers;
+      },
     }
   }
 </script>

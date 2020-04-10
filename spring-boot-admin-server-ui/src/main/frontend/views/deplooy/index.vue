@@ -10,7 +10,7 @@
     </a-button>
     <template v-if="loaded"> 
       <app-tab v-if="titleKey === 'app'" :servers="servers" :groups="groups" :environments="environments" :instances="instances" :deploy="deploy" ref="app"></app-tab>
-      <server-tab v-else :instances="instances" :deploy="deploy" ref="ser"></server-tab>
+      <server-tab v-else :instances="instances" :deploy="deploy" :environments="environments" ref="ser"></server-tab>
     </template>
   </a-card>
 </template>

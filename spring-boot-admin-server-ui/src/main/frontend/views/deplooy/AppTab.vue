@@ -326,3 +326,8 @@ import Vue from 'vue'
     }
   }
 </script>
+<style scoped>
+  .appTabDiv >>> .ant-table-body .ant-table-thead .ant-table-row-cell-last {
+    text-align: center !important;
+  }
+</style>

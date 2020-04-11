@@ -14,25 +14,17 @@
  * limitations under the License.
  */
 
-package de.codecentric.boot.admin.server.domain.values;
+package de.codecentric.boot.admin.server.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-import de.codecentric.boot.admin.server.domain.Environment;
+public enum InstanceStatus {
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class EnvironmentInfo {
+	UP, DOWN, DEPLOYING, STARTING, SHUTDOWN, DEPLOY_FAILED;
 
-	Long id;
-
-	String name;
-
-	public static EnvironmentInfo fromEntity(Environment environment) {
-		return new EnvironmentInfo(environment.getId(), environment.getName());
+	@JsonValue
+	public int toValue() {
+		return ordinal();
 	}
 
 }

@@ -62,7 +62,11 @@ export default {
   props: {
     deploy: {
       type: Deploy,
-      default: () => new Deploy(),
+      required: true
+    },
+    groups: {
+      type: Array,
+      default: () => [],
     },
     servers: {
       type: Array,

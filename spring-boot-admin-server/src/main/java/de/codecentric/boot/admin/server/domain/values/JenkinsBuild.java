@@ -18,13 +18,13 @@ package de.codecentric.boot.admin.server.domain.values;
 
 import lombok.AllArgsConstructor;
 
+import de.codecentric.boot.admin.server.domain.InstanceStatus;
+
 @lombok.Data
 @AllArgsConstructor
 public class JenkinsBuild {
 
-	private boolean queued;
-
-	private boolean building;
+	InstanceStatus status;
 
 	private long duration;
 
@@ -33,16 +33,29 @@ public class JenkinsBuild {
 	private long timestamp;
 
 	public JenkinsBuild() {
-		this.queued = false;
-		this.building = false;
 		duration = 0;
 		estimatedDuration = 0;
 		timestamp = 0;
 	}
 
+	public JenkinsBuild(InstanceStatus status) {
+		this.status = status;
+	}
+
+	public JenkinsBuild(boolean queued, boolean building, long duration, long estimatedDuration, long timestamp) {
+		if (queued || building) {
+			status = InstanceStatus.DEPLOYING;
+		}
+		else {
+			status = InstanceStatus.UP;
+		}
+		this.duration = duration;
+		this.estimatedDuration = estimatedDuration;
+		this.timestamp = timestamp;
+	}
+
 	public JenkinsBuild(boolean queued, boolean building) {
-		this.queued = queued;
-		this.building = building;
+		this(queued, building, 0, 0, 0);
 	}
 
 }

@@ -9,8 +9,11 @@
       {{ titleKey |changeTitle }}
     </a-button>
     <template v-if="loaded"> 
-      <app-tab v-if="titleKey === 'app'" :servers="servers" :groups="groups" :environments="environments" :instances="instances" :deploy="deploy" ref="app"></app-tab>
+      <app-tab v-if="titleKey === 'app'" :status="status" :servers="servers" :groups="groups" :environments="environments" :instances="instances" :deploy="deploy" ref="app"></app-tab>
       <server-tab v-else :instances="instances" :deploy="deploy" :environments="environments" ref="ser"></server-tab>
+    </template>
+    <template v-else>
+      <a-spin/>
     </template>
   </a-card>
 </template>
@@ -39,6 +42,14 @@ export default {
           key: 'server',
           tab: '服务器'
         }
+      ],
+      status: [
+        { id: 0, name: "运行中"},
+        { id: 1, name: "关闭"},
+        { id: 2, name: "部署中"},
+        { id: 3, name: "启动中"},
+        { id: 4, name: "关闭中"},
+        { id: 5, name: "部署失败"}
       ],
       loaded: false,
       titleKey: 'app',

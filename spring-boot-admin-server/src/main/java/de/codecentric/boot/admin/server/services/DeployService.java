@@ -26,21 +26,14 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.PostConstruct;
 
-import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.Build;
-import com.offbytwo.jenkins.model.BuildWithDetails;
-import com.offbytwo.jenkins.model.JobWithDetails;
-import com.offbytwo.jenkins.model.QueueItem;
-import com.offbytwo.jenkins.model.QueueReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
@@ -48,17 +41,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import de.codecentric.boot.admin.server.config.JenkinsProperties;
 import de.codecentric.boot.admin.server.domain.DeployInstance;
 import de.codecentric.boot.admin.server.domain.DeployServer;
-import de.codecentric.boot.admin.server.domain.Environment;
 import de.codecentric.boot.admin.server.domain.MicroService;
 import de.codecentric.boot.admin.server.domain.Operation;
 import de.codecentric.boot.admin.server.domain.OperationType;
@@ -118,17 +108,11 @@ public class DeployService {
 	@Autowired
 	private OperationRepository operationRepository;
 
-	@Value("${eureka.client.serviceUrl.defaultZone}")
-	private String eurekaAddress;
-
 	@Autowired
 	InstanceWebClient.Builder instanceWebClientBuilder;
 
-	// @Autowired
-	// JenkinsService jenkinsService;
-
 	@Autowired
-	private JenkinsProperties jenkinsProperties;
+	JenkinsService jenkinsService;
 
 	InstanceWebProxy instanceWebProxy;
 
@@ -259,13 +243,6 @@ public class DeployService {
 		}).collect(Collectors.toList());
 	}
 
-	public Optional<JenkinsBuild> getBuildInfoById(Long deployId) {
-		return deployInstanceRepository.findById(deployId).map((deployInstance) -> {
-			MicroService microService = microServiceRepository.findById(deployInstance.getServiceId()).get();
-			return getBuildInfo(microService.getJobName(), deployInstance);
-		});
-	}
-
 	public String startBuild(Long deployId) throws URISyntaxException {
 		return startBuild(deployId, false, false);
 	}
@@ -274,14 +251,16 @@ public class DeployService {
 		return startBuild(deployId, false, true);
 	}
 
+	public Pair<String, String> test(Pair<StringBuilder, StringBuilder> sb, Pair<String, String> item) {
+		Pair<String, String> of = Pair.of(sb.getFirst() + item.getFirst(), sb.getSecond() + item.getSecond());
+		return of;
+	}
+
 	public String startBuild(BuildRequest request) throws URISyntaxException {
-		List<Operation> operations = request.getInstances().stream().map((instanceId) ->
-			new Operation(instanceId, OperationType.DEPLOY)
-		).collect(Collectors.toList());
+		List<Operation> operations = request.getInstances().stream()
+				.map((instanceId) -> new Operation(instanceId, OperationType.DEPLOY)).collect(Collectors.toList());
 		operationRepository.saveAll(operations);
 
-		JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
-			jenkinsProperties.getUser(), jenkinsProperties.getPassword());
 		Map<String, String> param = new HashMap<>(); // service.getMetadata();
 		DeployInstance deployInstance = deployInstances.get(request.getInstances().get(0));
 		if (deployInstance != null) {
@@ -293,30 +272,36 @@ public class DeployService {
 			param.put("profile", microService.getProfile());
 			param.put("port", String.valueOf(microService.getPort()));
 
-
-			Stream<Pair<String, String>> stream = request.getInstances().stream().map((instanceId) -> {
+			Pair<String, String> stream = request.getInstances().stream().map((instanceId) -> {
 				DeployInstance instance = deployInstances.get(instanceId);
 				if (instance != null) {
-					DeployServer deployServer = deployServers.get(deployInstance.getServerId());
+					DeployServer deployServer = deployServers.get(instance.getServerId());
 					return Pair.of(deployServer.getIp(), deployServer.getUser());
 				}
 				return Pair.of("", "");
-			}).filter((item) -> item.getFirst().length() > 0);
-			String ips = stream.map((x) -> x.getFirst()).collect(Collectors.joining(","));
-			String users = stream.map((x) -> x.getSecond()).collect(Collectors.joining(","));
+			}).filter((item) -> item.getFirst().length() > 0).reduce(Pair.of("", ""), (l, r) -> {
+				if (l.getFirst().isEmpty()) {
+					return r;
+				}
+				String first = l.getFirst() + "," + r.getFirst();
+				String second = l.getSecond() + "," + r.getSecond();
+				return Pair.of(first, second);
+			});
+			String ips = stream.getFirst();
+			String users = stream.getSecond();
 			param.put("server", ips);
 			param.put("userName", users);
 			try {
-				String itemUrl = sendBuild(microService.getJobName(), param);
+				String itemUrl = jenkinsService.sendBuild(microService.getJobName(), param);
 				deployInstance.setQueueId(itemUrl);
 				deployInstanceRepository.save(deployInstance);
+				return itemUrl;
 			}
 			catch (IOException ex) {
 				LOGGER.error("error push job to jenkins", ex);
 			}
 		}
-
-
+		return "";
 	}
 
 	public String startBuild(Long instanceId, boolean rollback, boolean onlyStart) throws URISyntaxException {
@@ -375,7 +360,7 @@ public class DeployService {
 				param.put("port", String.valueOf(microService.getPort()));
 				param.put("deployPath", microService.getPath());
 
-				String itemUrl = sendBuild(microService.getJobName(), param);
+				String itemUrl = jenkinsService.sendBuild(microService.getJobName(), param);
 				deployInstance.setQueueId(itemUrl);
 				deployInstanceRepository.save(deployInstance);
 				return itemUrl;
@@ -387,109 +372,13 @@ public class DeployService {
 		return "";
 	}
 
-	protected String sendBuild(String jobName, Map<String, String> param) throws IOException, URISyntaxException {
-		if (eurekaAddress != null) {
-			int index = eurekaAddress.indexOf("/eureka");
-			String eurekaUrl = eurekaAddress;
-			if (index > 0) {
-				eurekaUrl = eurekaAddress.substring(0, index);
-			}
-			param.put("eurekaAddress", eurekaUrl);
-		}
-		JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
-			jenkinsProperties.getUser(), jenkinsProperties.getPassword());
-
-		JobWithDetails jobWithDetails = jenkinsServer.getJob(jobName);
-		QueueReference reference = jobWithDetails.build(param, true);
-		return reference.getQueueItemUrlPart();
-	}
-
 	public boolean stopBuild(Long deployId) {
 		DeployInstance deployInstance = deployInstances.get(deployId);
 		if (deployInstance != null) {
 			MicroService microService = microServiceRepository.findById(deployInstance.getServiceId()).get();
-			Pair<Optional<Build>, Boolean> pair = getBuild(microService.getJobName(), deployInstance);
-			if (pair != null) {
-				Optional<Build> build = pair.getFirst();
-				try {
-					if (build.isPresent()) {
-						BuildWithDetails buildWithDetails = build.get().details();
-						updateDeployBuildId(deployInstance, buildWithDetails.getId());
-						build.get().Stop(true);
-						return true;
-					}
-				}
-				catch (IOException ex) {
-					LOGGER.error("error push job to jenkins", ex);
-				}
-			}
+			jenkinsService.stopBuild(microService.getJobName(), deployInstance);
 		}
 		return false;
-	}
-
-	private void updateDeployBuildId(DeployInstance deployInstance, String buildId) {
-		deployInstance.setLastBuildId(buildId);
-		deployInstance.setQueueId("");
-		deployInstanceRepository.save(deployInstance);
-	}
-
-	public JenkinsBuild getBuildInfo(String jobName, DeployInstance deployInstance) {
-		try {
-			Pair<Optional<Build>, Boolean> pair = getBuild(jobName, deployInstance);
-			if (pair != null) {
-				Optional<Build> build = pair.getFirst();
-				JenkinsBuild jenkinsBuild;
-				if (build.isPresent()) {
-					BuildWithDetails buildWithDetails = build.get().details();
-					updateDeployBuildId(deployInstance, buildWithDetails.getId());
-
-					jenkinsBuild = new JenkinsBuild(pair.getSecond(), buildWithDetails.isBuilding(),
-							buildWithDetails.getDuration(), buildWithDetails.getEstimatedDuration(),
-							buildWithDetails.getTimestamp());
-				}
-				else {
-					jenkinsBuild = new JenkinsBuild(pair.getSecond(), false, 0, 0, 0);
-				}
-				return jenkinsBuild;
-			}
-		}
-		catch (Exception ex) {
-			LOGGER.error("query jenkins failed ", ex);
-		}
-		return new JenkinsBuild();
-	}
-
-	public Pair<Optional<Build>, Boolean> getBuild(String jobName, DeployInstance deployInstance) {
-		try {
-			JenkinsServer jenkinsServer = new JenkinsServer(new URI(jenkinsProperties.getHost()),
-					jenkinsProperties.getUser(), jenkinsProperties.getPassword());
-			JobWithDetails jobWithDetails = jenkinsServer.getJob(jobName);
-			Build build = null;
-			QueueItem queueItem = null;
-			String reference = deployInstance.getQueueId();
-			if (!StringUtils.isEmpty(reference)) {
-				QueueReference queueReference = new QueueReference(reference);
-				queueItem = jenkinsServer.getQueueItem(queueReference);
-
-				if (!queueItem.isCancelled() && jobWithDetails.isInQueue()) {
-					return Pair.of(Optional.empty(), queueItem != null);
-				}
-				build = jenkinsServer.getBuild(queueItem);
-			}
-			else if (!StringUtils.isEmpty(deployInstance.getLastBuildId())) {
-				build = jobWithDetails.getBuildByNumber(Integer.parseInt(deployInstance.getLastBuildId()));
-			}
-			if (build == null) {
-				return Pair.of(Optional.empty(), queueItem != null);
-			}
-			else {
-				return Pair.of(Optional.of(build), queueItem != null);
-			}
-		}
-		catch (Exception ex) {
-			LOGGER.error("query jenkins failed ", ex);
-		}
-		return null;
 	}
 
 	public String getBuildLog(Long deployId) {
@@ -498,7 +387,8 @@ public class DeployService {
 			try {
 				DeployInstance deployInstance = deployInstanceOptional.get();
 				MicroService microService = microServiceRepository.findById(deployInstance.getServiceId()).get();
-				Pair<Optional<Build>, Boolean> pair = getBuild(microService.getJobName(), deployInstance);
+				Pair<Optional<Build>, Boolean> pair = jenkinsService.getBuild(microService.getJobName(),
+						deployInstance);
 				if (pair != null) {
 					Optional<Build> build = pair.getFirst();
 					if (build.isPresent()) {
@@ -604,10 +494,11 @@ public class DeployService {
 		else {
 			statusInfo = StatusInfo.valueOf("DOWN");
 		}
-		JenkinsBuild jenkinsBuild = getBuildInfo(microService.getJobName(), deployInstance);
+		JenkinsBuild jenkinsBuild = new JenkinsBuild(deployInstance.getStatus());
+		// jenkinsService.getBuildInfo(microService.getJobName(), deployInstance);
 
-		return new DeployInstanceInfo(deployInstance.getId(), sbaId, microService.getName(), deployInstance.getServerId(),
-				ProtocolSchema + deployServer.getName() + ":" + microService.getPort(),
+		return new DeployInstanceInfo(deployInstance.getId(), sbaId, microService.getName(),
+				deployInstance.getServerId(), ProtocolSchema + deployServer.getName() + ":" + microService.getPort(),
 				deployInstance.getServiceGroup(), deployInstance.getBranch(), deployInstance.getRollbackBranch(),
 				deployInstance.getProfile(), statusInfo, jenkinsBuild, operationInfo);
 	}
@@ -624,25 +515,23 @@ public class DeployService {
 	}
 
 	public List<ServerInfo> listServers() {
-		return deployServers.values().stream().map(
-				(deployServer) -> ServerInfo.fromEntity(deployServer))
+		return deployServers.values().stream().map((deployServer) -> ServerInfo.fromEntity(deployServer))
 				.collect(Collectors.toList());
 	}
 
 	public List<DeployInstanceInfo> listInstance() {
 		return deployInstances.values().stream().map((deployInstance) -> generateDeployInstanceInfo(deployInstance))
-			.collect(Collectors.toList());
+				.collect(Collectors.toList());
 	}
 
 	public List<EnvironmentInfo> listEnvironments() {
 		return StreamSupport.stream(environmentRepository.findAll().spliterator(), true)
-			.map((environment) -> EnvironmentInfo.fromEntity(environment))
-			.collect(Collectors.toList());
+				.map((environment) -> EnvironmentInfo.fromEntity(environment)).collect(Collectors.toList());
 	}
 
 	public List<GroupInfo> listGroup() {
 		return StreamSupport.stream(groupRepository.findAll().spliterator(), true)
-			.map((group) -> GroupInfo.fromEntity(group))
-			.collect(Collectors.toList());
+				.map((group) -> GroupInfo.fromEntity(group)).collect(Collectors.toList());
 	}
+
 }

@@ -21,9 +21,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
-import de.codecentric.boot.admin.server.domain.Environment;
-import de.codecentric.boot.admin.server.domain.values.BuildRequest;
-import de.codecentric.boot.admin.server.domain.values.EnvironmentInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -39,10 +36,11 @@ import reactor.core.publisher.Mono;
 import de.codecentric.boot.admin.server.domain.DeployInstance;
 import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
 import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
+import de.codecentric.boot.admin.server.domain.values.BuildRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
+import de.codecentric.boot.admin.server.domain.values.EnvironmentInfo;
 import de.codecentric.boot.admin.server.domain.values.GroupInfo;
-import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.domain.values.ServerInfo;
 import de.codecentric.boot.admin.server.domain.values.ServiceRequest;
 import de.codecentric.boot.admin.server.domain.values.ShutdownRequest;
@@ -125,10 +123,11 @@ public class DeployController {
 		return Mono.just(queue);
 	}
 
-	@GetMapping(path = "/deploy/detail/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public JenkinsBuild queryDetail(@PathVariable("deployId") Long deployId) {
-		return deployService.getBuildInfoById(deployId).orElse(new JenkinsBuild());
-	}
+	// @GetMapping(path = "/deploy/detail/{deployId}", produces =
+	// MediaType.APPLICATION_JSON_VALUE)
+	// public JenkinsBuild queryDetail(@PathVariable("deployId") Long deployId) {
+	// return deployService.getBuildInfoById(deployId).orElse(new JenkinsBuild());
+	// }
 
 	@PostMapping(path = "/deploy/instance", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Long addDeployInstance(@RequestBody DeployInstanceRequest deployInstanceRequest) {

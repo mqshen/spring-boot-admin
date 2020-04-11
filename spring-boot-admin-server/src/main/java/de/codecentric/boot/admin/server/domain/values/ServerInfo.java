@@ -23,9 +23,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import de.codecentric.boot.admin.server.domain.DeployServer;
-import de.codecentric.boot.admin.server.domain.Environment;
 import de.codecentric.boot.admin.server.domain.LoginType;
-import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 
 @Data
 @NoArgsConstructor
@@ -62,8 +60,8 @@ public class ServerInfo {
 	}
 
 	public static ServerInfo fromEntity(DeployServer server) {
-		return new ServerInfo(server.getId(), server.getEnvironmentId(),
-				server.getName(), server.getIp(), server.getLoginType(), server.getUser());
+		return new ServerInfo(server.getId(), server.getEnvironmentId(), server.getName(), server.getIp(),
+				server.getLoginType(), server.getUser());
 	}
 
 }

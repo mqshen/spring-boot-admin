@@ -19,6 +19,8 @@ package de.codecentric.boot.admin.server.domain;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -56,6 +58,9 @@ public class DeployInstance {
 	Date lastDeployTime;
 
 	String lastBuildId;
+
+	@Enumerated(EnumType.ORDINAL)
+	InstanceStatus status;
 
 	// @ManyToOne(fetch = FetchType.LAZY, targetEntity = MicroService.class)
 	// @JoinColumn(name = "serviceId", insertable = false, updatable = false)

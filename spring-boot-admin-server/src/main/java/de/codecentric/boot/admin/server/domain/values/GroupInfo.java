@@ -16,11 +16,11 @@
 
 package de.codecentric.boot.admin.server.domain.values;
 
-import de.codecentric.boot.admin.server.domain.Environment;
-import de.codecentric.boot.admin.server.domain.Group;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import de.codecentric.boot.admin.server.domain.Group;
 
 @Data
 @NoArgsConstructor
@@ -31,7 +31,8 @@ public class GroupInfo {
 
 	String name;
 
-	static public GroupInfo fromEntity(Group group) {
+	public static GroupInfo fromEntity(Group group) {
 		return new GroupInfo(group.getId(), group.getName());
 	}
+
 }

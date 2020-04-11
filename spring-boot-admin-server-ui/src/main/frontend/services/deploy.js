@@ -54,9 +54,9 @@ class Deploy{
         return this.axios.post(uri`deploy/rollback/${deployId}`);
     }
 
-    async queryDetail(deployId) {
-        return this.axios.get(uri`deploy/detail/${deployId}`);
-    }
+    // async queryDetail(deployId) {
+    //     return this.axios.get(uri`deploy/detail/${deployId}`);
+    // }
 
     async queryBuildLog(deployId) {
         return this.axios.get(uri`deploy/log/${deployId}`);

@@ -37,14 +37,14 @@
 
     <a-table :columns="columns" :dataSource="applications" :childrenColumnName="childName" :rowKey="(record) => record.instances ? record.id : record.sbaId">
       <span slot="status" slot-scope="text, record">
-        <template v-if="record.buildInfo && !(record.buildInfo.queued || record.buildInfo.building)">
+        <template v-if="record.buildInfo && record.buildInfo.status < 2">
           {{ record.statusInfo.status }}
         </template>
         <template v-else-if="record.instances">
           {{ record.instances | statusFilter }}
         </template>
         <template v-else>
-          部署中 <a-spin/>
+          {{ showDisplay(record.buildInfo.status, status) }} <a-spin/>
         </template>
       </span>
       <span slot="recordInfo" slot-scope="text,record">
@@ -91,7 +91,7 @@
               <a-menu-item> <a @click="addServer(record)">新添服务器</a> </a-menu-item>
             </template>
             <template v-else>
-              <a-menu-item> <a @click="doStart(redord)">上线</a> </a-menu-item>
+              <a-menu-item> <a @click="doStart(record)">上线</a> </a-menu-item>
               <a-menu-item> <a @click="doShutdown(record)">下线</a> </a-menu-item>
               <a-menu-item> <a @click="doRollback(record)">回滚</a> </a-menu-item>
               <a-menu-item> <a @click="doRefesh(record)">配置刷新</a> </a-menu-item>
@@ -103,7 +103,7 @@
     </a-table>
     <app-modal ref="modal" @ok="handleOk" :deploy="deploy"/>
     <build-log ref="logModal" @ok="handleOk" :deploy="deploy"/>
-    <app-set-modal ref="setModal" @ok="handleSOk" :servers="servers" :group="grpup"/>
+    <app-set-modal ref="setModal" @ok="handleSOk" :servers="servers" :groups="groups" :deploy="deploy"/>
   </div>
 </template>
 <script>
@@ -194,6 +194,10 @@ import Vue from 'vue'
       deploy: {
         type: Deploy,
         default: () => new Deploy(),
+      },
+      status: {
+        type: Array,
+        default: () => [],
       },
       groups: {
         type: Array,
@@ -287,19 +291,19 @@ import Vue from 'vue'
         if(application.instances) {
           this.$refs.modal.edit(application);
         } else {
-          const app = Object.assign({id: instance.id,
-          serviceName: instance.name,
-          serverName: instance.server}, instance);
+          const app = Object.assign({id: application.id,
+          serviceName: application.name,
+          serverName: this.showDisplay(application.serverId, this.servers)}, application);
           this.$refs.setModal.edit(app);
         }
       },
-      queryBuilding(instance) {
-        this.deploy.queryDetail(instance.id).then((res) =>{
-          instance.buildInfo = res.data;
-          if(instance.buildInfo.queued || instance.buildInfo.building )
-            setTimeout(() => this.queryBuilding(instance), 3000);
-        });
-      },
+      // queryBuilding(instance) {
+      //   this.deploy.queryDetail(instance.id).then((res) =>{
+      //     instance.buildInfo = res.data;
+      //     if(instance.buildInfo.queued || instance.buildInfo.building )
+      //       setTimeout(() => this.queryBuilding(instance), 3000);
+      //   });
+      // },
       addServer(microService) {
         const app = {serviceId: microService.id, serviceName: microService.name}
         this.$refs.setModal.add(app);
@@ -311,28 +315,27 @@ import Vue from 'vue'
         alert('配置刷新成功');
       },
       doShutdown(instance) {
+        instance.buildInfo.status = 4;
         const shutdownRequest = {'instanceId': instance.sbaId, 'deployInstanceId': instance.id};
-        this.deploy.doShutdown(shutdownRequest).then(() => {
-          setTimeout(() => this.queryBuilding(instance), 3000);
-        });
+        this.deploy.doShutdown(shutdownRequest)
       },
       doRollback(instance) {
-        instance.buildInfo.building = true;
+        instance.buildInfo.status = 2;
         this.deploy.doRollback(instance.id)
       },
       doStart(instance) {
-        instance.buildInfo.building = true;
+        instance.buildInfo.status = 3;
         this.deploy.doStart(instance.id)
       }, 
       doBuild(instance) {
         if (instance.instances) {
           instance.instances.forEach((instance) =>{
-            instance.buildInfo.building = true;
+            instance.buildInfo.status = 2;
           });
           const instanceIds = instance.instances.map((instance) => instance.id);
           this.deploy.doBuild(instanceIds)
         } else {
-          instance.buildInfo.building = true;
+          instance.buildInfo.status = 2;
           this.deploy.doBuild(instance.id)
         }
       }, 

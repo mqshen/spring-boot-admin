@@ -21,6 +21,9 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import de.codecentric.boot.admin.server.domain.Environment;
+import de.codecentric.boot.admin.server.domain.values.BuildRequest;
+import de.codecentric.boot.admin.server.domain.values.EnvironmentInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -38,6 +41,7 @@ import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
 import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
+import de.codecentric.boot.admin.server.domain.values.GroupInfo;
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.domain.values.ServerInfo;
 import de.codecentric.boot.admin.server.domain.values.ServiceRequest;
@@ -72,12 +76,10 @@ public class DeployController {
 				.map((application) -> ServerSentEvent.builder(application).build()).mergeWith(ping());
 	}
 
-	// @GetMapping(path = "/deploy/jenkins", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-	// public Flux<ServerSentEvent<DeployInstanceInfo>> jenkinsStream() {
-	// return deployService.getJenkinsBuild().map((jenkinsBuild) ->
-	// ServerSentEvent.builder(jenkinsBuild).build())
-	// .mergeWith(ping());
-	// }
+	@GetMapping(path = "/deploy/list/instances", produces = MediaType.APPLICATION_JSON_VALUE)
+	public List<DeployInstanceInfo> listInstance() {
+		return deployService.listInstance();
+	}
 
 	@GetMapping(path = "/deploy/list/servers", produces = MediaType.APPLICATION_JSON_VALUE)
 	public List<ServerInfo> listServers() {
@@ -95,6 +97,13 @@ public class DeployController {
 		return deployService.shutdown(shutdownRequest.getInstanceId(), shutdownRequest.getDeployInstanceId());
 	}
 
+	@PostMapping(path = "/deploy/buildAll", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Mono<String> doBuildAll(@RequestBody BuildRequest request) throws URISyntaxException {
+		LOGGER.debug("start jenkins build");
+		String queue = deployService.startBuild(request);
+		return Mono.just(queue);
+	}
+
 	@PostMapping(path = "/deploy/build/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Mono<String> doBuild(@PathVariable("deployId") Long deployId) throws URISyntaxException {
 		LOGGER.debug("start jenkins build");
@@ -102,10 +111,17 @@ public class DeployController {
 		return Mono.just(queue);
 	}
 
+	@PostMapping(path = "/deploy/start/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Mono<String> doStart(@PathVariable("deployId") Long deployId) throws URISyntaxException {
+		LOGGER.debug("start jenkins build");
+		String queue = deployService.start(deployId);
+		return Mono.just(queue);
+	}
+
 	@PostMapping(path = "/deploy/rollback/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Mono<String> doRollback(@PathVariable("deployId") Long deployId) throws URISyntaxException {
 		LOGGER.debug("start jenkins rollback");
-		String queue = deployService.startBuild(deployId, true);
+		String queue = deployService.startBuild(deployId, true, false);
 		return Mono.just(queue);
 	}
 
@@ -142,6 +158,16 @@ public class DeployController {
 	@GetMapping(path = "/deploy/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Flux<Optional<DeployInstance>> dorefresh() {
 		return deployService.doRefresh();
+	}
+
+	@GetMapping(path = "/deploy/environments", produces = MediaType.APPLICATION_JSON_VALUE)
+	public List<EnvironmentInfo> queryEnvironments() {
+		return deployService.listEnvironments();
+	}
+
+	@GetMapping(path = "/deploy/groups", produces = MediaType.APPLICATION_JSON_VALUE)
+	public List<GroupInfo> queryGroups() {
+		return deployService.listGroup();
 	}
 
 	private static <T> Flux<ServerSentEvent<T>> ping() {

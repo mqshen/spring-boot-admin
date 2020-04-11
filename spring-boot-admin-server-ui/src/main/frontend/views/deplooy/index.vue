@@ -8,8 +8,10 @@
     <a-button type="primary" icon="plus" slot="tabBarExtraContent" @click="handleAdd()">
       {{ titleKey |changeTitle }}
     </a-button>
-    <app-tab v-if="titleKey === 'app'" :servers="servers" :deploy="deploy" ref="app"></app-tab>
-    <server-tab v-else ref="ser"></server-tab>
+    <template v-if="loaded"> 
+      <app-tab v-if="titleKey === 'app'" :servers="servers" :groups="groups" :environments="environments" :instances="instances" :deploy="deploy" ref="app"></app-tab>
+      <server-tab v-else :instances="instances" :deploy="deploy" :environments="environments" ref="ser"></server-tab>
+    </template>
   </a-card>
 </template>
 
@@ -38,15 +40,30 @@ export default {
           tab: '服务器'
         }
       ],
+      loaded: false,
       titleKey: 'app',
       servers: [],
-      deploy: new Deploy()
+      deploy: new Deploy(),
+      instances: [],
+      groups: [],
+      environments: []
     }
   },
   mounted() {
     this.deploy.listServers().then((res) => {
       this.servers = res.data;
     });
+    this.deploy.listGroups().then((res) => {
+      this.groups = res.data;
+    });
+    this.deploy.listEnvironments().then((res) => {
+      this.environments = res.data;
+    });
+    this.deploy.listInstacne().then((res) => {
+      this.instances = res.data;
+      this.loaded = true;
+    });
+    this.onChange();
   },
   filters: {
     changeTitle (key) {
@@ -66,6 +83,39 @@ export default {
         this.$refs.app.addEvent()
       } else {
         this.$refs.ser.addEvent()
+      }
+    },
+    onChange() {
+      const eventSource = new EventSource('deploy');
+      eventSource.onmessage = (message) => {
+        this.transformResponse(message.data, false)
+      }
+      eventSource.onerror = (err) => {
+        window.console.log(err);
+      }
+    },
+    processInstance(data, onlyJenkins) {
+      this.instances.forEach((instance) => {
+        if (instance.id == data.id) {
+          if (onlyJenkins) {
+            Object.assign(instance.buildInfo, data.buildInfo);
+          } else {
+            Object.assign(instance, data);
+          }
+        }
+      })
+    },
+    transformResponse(data, onlyJenkins) {
+      if (!data) {
+        return data;
+      }
+      const json = JSON.parse(data);
+      if (json instanceof Array) {
+        json.forEach((instance) => {
+          this.processInstance(instance, onlyJenkins);
+        });
+      } else {
+        this.processInstance(json, onlyJenkins);
       }
     }
   },

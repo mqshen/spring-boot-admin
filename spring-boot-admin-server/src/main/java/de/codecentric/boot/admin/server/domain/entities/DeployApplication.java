@@ -53,6 +53,6 @@ public class DeployApplication {
 
 	String parameter;
 
-	private final List<DeployInstanceInfo> instances;
+	private final List<Long> children;
 
 }

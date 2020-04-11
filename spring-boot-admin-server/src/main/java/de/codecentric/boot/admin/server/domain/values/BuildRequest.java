@@ -16,7 +16,8 @@
 
 package de.codecentric.boot.admin.server.domain.values;
 
-import de.codecentric.boot.admin.server.domain.Environment;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,13 +25,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EnvironmentInfo {
+public class BuildRequest {
 
-	Long id;
+	List<Long> instances;
 
-	String name;
-
-	static public EnvironmentInfo fromEntity(Environment environment) {
-		return new EnvironmentInfo(environment.getId(), environment.getName());
-	}
 }

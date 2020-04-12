@@ -87,12 +87,12 @@
         <a-dropdown>
           <a class="ant-dropdown-link"> 更多 <a-icon type="down" /></a>
           <a-menu slot="overlay">
+            <a-menu-item> <a @click="doStart(record)">上线</a> </a-menu-item>
+            <a-menu-item> <a @click="doShutdown(record)">下线</a> </a-menu-item>
             <template v-if="record.instances">
               <a-menu-item> <a @click="addServer(record)">新添服务器</a> </a-menu-item>
             </template>
             <template v-else>
-              <a-menu-item> <a @click="doStart(record)">上线</a> </a-menu-item>
-              <a-menu-item> <a @click="doShutdown(record)">下线</a> </a-menu-item>
               <a-menu-item> <a @click="doRollback(record)">回滚</a> </a-menu-item>
               <a-menu-item> <a @click="doRefesh(record)">配置刷新</a> </a-menu-item>
               <a-menu-item> <a @click="showBuildLog(record)">控制台输出</a> </a-menu-item>
@@ -315,17 +315,35 @@ import Vue from 'vue'
         alert('配置刷新成功');
       },
       doShutdown(instance) {
-        instance.buildInfo.status = 4;
-        const shutdownRequest = {'instanceId': instance.sbaId, 'deployInstanceId': instance.id};
-        this.deploy.doShutdown(shutdownRequest)
+        if (instance.instances) {
+          instance.instances.forEach((instance) =>{
+            instance.buildInfo.status = 4;
+          });
+          const instanceIds = instance.instances.filter((instance) => instance.sbaId).map((instance) => {
+            return {'instanceId': instance.sbaId, 'deployInstanceId': instance.id}
+          });
+          this.deploy.doShutdown(instanceIds)
+        } else {
+          instance.buildInfo.status = 4;
+          const shutdownRequest = {'instanceId': instance.sbaId, 'deployInstanceId': instance.id};
+          this.deploy.doShutdown([shutdownRequest])
+        }
       },
       doRollback(instance) {
         instance.buildInfo.status = 2;
         this.deploy.doRollback(instance.id)
       },
       doStart(instance) {
-        instance.buildInfo.status = 3;
-        this.deploy.doStart(instance.id)
+        if (instance.instances) {
+          instance.instances.forEach((instance) =>{
+            instance.buildInfo.status = 3;
+          });
+          const instanceIds = instance.instances.map((instance) => instance.id);
+          this.deploy.doStart(instanceIds)
+        } else {
+          instance.buildInfo.status = 3;
+          this.deploy.doStart([instance.id])
+        }
       }, 
       doBuild(instance) {
         if (instance.instances) {

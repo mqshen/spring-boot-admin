@@ -19,13 +19,16 @@ package de.codecentric.boot.admin.server.services;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.PostConstruct;
@@ -65,6 +68,7 @@ import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.domain.values.OperationInfo;
 import de.codecentric.boot.admin.server.domain.values.ServerInfo;
 import de.codecentric.boot.admin.server.domain.values.ServiceRequest;
+import de.codecentric.boot.admin.server.domain.values.Shutdown;
 import de.codecentric.boot.admin.server.domain.values.StatusInfo;
 import de.codecentric.boot.admin.server.repositories.DeployInstanceRepository;
 import de.codecentric.boot.admin.server.repositories.DeployServerRepository;
@@ -247,8 +251,14 @@ public class DeployService {
 		return startBuild(deployId, false, false);
 	}
 
-	public String start(Long deployId) throws URISyntaxException {
-		return startBuild(deployId, false, true);
+	public String start(List<Long> deployIdArray) throws URISyntaxException {
+		try {
+			return startBuild(deployIdArray, true);
+		}
+		catch (URISyntaxException e) {
+			LOGGER.error("failed start instance ", e);
+			return "";
+		}
 	}
 
 	public Pair<String, String> test(Pair<StringBuilder, StringBuilder> sb, Pair<String, String> item) {
@@ -256,23 +266,28 @@ public class DeployService {
 		return of;
 	}
 
-	public String startBuild(BuildRequest request) throws URISyntaxException {
-		List<Operation> operations = request.getInstances().stream()
+	public String startBuild(List<Long> instances, boolean onlyStart) throws URISyntaxException {
+		List<Operation> operations = instances.stream()
 				.map((instanceId) -> new Operation(instanceId, OperationType.DEPLOY)).collect(Collectors.toList());
 		operationRepository.saveAll(operations);
 
 		Map<String, String> param = new HashMap<>(); // service.getMetadata();
-		DeployInstance deployInstance = deployInstances.get(request.getInstances().get(0));
+		DeployInstance deployInstance = deployInstances.get(instances.get(0));
 		if (deployInstance != null) {
 			MicroService microService = microServices.get(deployInstance.getServiceId());
 			param.put("projectName", microService.getProjectName());
 			param.put("branch", microService.getBranch());
-			param.put("onlyStart", "false");
+			if (onlyStart) {
+				param.put("onlyStart", "true");
+			}
+			else  {
+				param.put("onlyStart", "false");
+			}
 			param.put("deployPath", microService.getPath());
 			param.put("profile", microService.getProfile());
 			param.put("port", String.valueOf(microService.getPort()));
 
-			Pair<String, String> stream = request.getInstances().stream().map((instanceId) -> {
+			Pair<String, String> stream = instances.stream().map((instanceId) -> {
 				DeployInstance instance = deployInstances.get(instanceId);
 				if (instance != null) {
 					DeployServer deployServer = deployServers.get(instance.getServerId());
@@ -503,15 +518,19 @@ public class DeployService {
 				deployInstance.getProfile(), statusInfo, jenkinsBuild, operationInfo);
 	}
 
-	public Mono<Boolean> shutdown(String instanceId, Long deployInstanceId) {
-		Operation operation = new Operation(deployInstanceId, OperationType.DEPLOY);
-		operationRepository.save(operation);
+	public Mono<List<Boolean>> shutdown(List<Shutdown> instances) {
+		Stream<Mono<Boolean>> mono = instances.stream().map((instance) -> {
+			Operation operation = new Operation(instance.getDeployInstanceId(), OperationType.DEPLOY);
+			operationRepository.save(operation);
 
-		URI uri = UriComponentsBuilder.fromPath("/shutdown").build(true).toUri();
-		Mono<Instance> instanceMono = this.instanceRegistry.getInstance(InstanceId.of(instanceId));
-		Mono<ClientResponse> clientResponseMono = instanceWebProxy.forward(instanceMono, uri, HttpMethod.POST,
+			URI uri = UriComponentsBuilder.fromPath("/shutdown").build(true).toUri();
+			Mono<Instance> instanceMono = this.instanceRegistry.getInstance(InstanceId.of(instance.getInstanceId()));
+			Mono<ClientResponse> clientResponseMono = instanceWebProxy.forward(instanceMono, uri, HttpMethod.POST,
 				new HttpHeaders(), BodyInserters.empty());
-		return clientResponseMono.map((response) -> response.statusCode().equals(HttpStatus.OK));
+			return clientResponseMono.map((response) -> response.statusCode().equals(HttpStatus.OK));
+		});
+		Mono<List<Boolean>> result = Flux.fromStream(mono).flatMap(x -> x).collectList();
+		return result;
 	}
 
 	public List<ServerInfo> listServers() {
@@ -533,5 +552,4 @@ public class DeployService {
 		return StreamSupport.stream(groupRepository.findAll().spliterator(), true)
 				.map((group) -> GroupInfo.fromEntity(group)).collect(Collectors.toList());
 	}
-
 }

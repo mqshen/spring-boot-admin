@@ -35,11 +35,11 @@ class Deploy{
     }
 
     async doShutdown(shutdownRequest) {
-        return this.axios.post(uri`deploy/shutdown`, shutdownRequest);
+        return this.axios.post(uri`deploy/shutdown`, {instances: shutdownRequest});
     }
 
-    async doStart(deployId) {
-        return this.axios.post(uri`deploy/start/${deployId}`);
+    async doStart(deployArray) {
+        return this.axios.post(uri`deploy/start`, {instances: deployArray});
     }
 
     async doBuild(deployId) {

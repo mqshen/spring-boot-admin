@@ -90,15 +90,15 @@ public class DeployController {
 	}
 
 	@PostMapping(path = "/deploy/shutdown", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Mono<Boolean> doShutdown(@RequestBody ShutdownRequest shutdownRequest) {
+	public Mono<List<Boolean>> doShutdown(@RequestBody ShutdownRequest shutdownRequest) {
 		LOGGER.debug("shutdown an instance");
-		return deployService.shutdown(shutdownRequest.getInstanceId(), shutdownRequest.getDeployInstanceId());
+		return deployService.shutdown(shutdownRequest.getInstances());
 	}
 
 	@PostMapping(path = "/deploy/buildAll", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Mono<String> doBuildAll(@RequestBody BuildRequest request) throws URISyntaxException {
 		LOGGER.debug("start jenkins build");
-		String queue = deployService.startBuild(request);
+		String queue = deployService.startBuild(request.getInstances(), false);
 		return Mono.just(queue);
 	}
 
@@ -109,10 +109,10 @@ public class DeployController {
 		return Mono.just(queue);
 	}
 
-	@PostMapping(path = "/deploy/start/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Mono<String> doStart(@PathVariable("deployId") Long deployId) throws URISyntaxException {
+	@PostMapping(path = "/deploy/start", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Mono<String> doStart(@RequestBody BuildRequest request) throws URISyntaxException {
 		LOGGER.debug("start jenkins build");
-		String queue = deployService.start(deployId);
+		String queue = deployService.start(request.getInstances());
 		return Mono.just(queue);
 	}
 

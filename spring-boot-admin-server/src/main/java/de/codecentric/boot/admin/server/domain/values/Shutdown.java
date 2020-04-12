@@ -16,8 +16,6 @@
 
 package de.codecentric.boot.admin.server.domain.values;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,8 +23,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShutdownRequest {
+public class Shutdown {
 
-	List<Shutdown> instances;
+	String instanceId;
+
+	Long deployInstanceId;
 
 }

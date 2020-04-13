@@ -24,26 +24,28 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.UnicastProcessor;
 
-public class JenkinsPublisher implements Publisher<Long> {
+import de.codecentric.boot.admin.server.domain.DeployInstance;
+
+public class JenkinsPublisher implements Publisher<DeployInstance> {
 
 	private static final Logger log = LoggerFactory.getLogger(JenkinsPublisher.class);
 
-	private final Flux<Long> publishedFlux;
+	private final Flux<DeployInstance> publishedFlux;
 
-	private final FluxSink<Long> sink;
+	private final FluxSink<DeployInstance> sink;
 
 	public JenkinsPublisher() {
-		UnicastProcessor<Long> unicastProcessor = UnicastProcessor.create();
+		UnicastProcessor<DeployInstance> unicastProcessor = UnicastProcessor.create();
 		this.publishedFlux = unicastProcessor.publish().autoConnect(0);
 		this.sink = unicastProcessor.sink();
 	}
 
-	protected void publish(Long event) {
+	protected void publish(DeployInstance event) {
 		log.debug("Event published {}", event);
 		this.sink.next(event);
 	}
 
-	public boolean append(Long event) {
+	public boolean append(DeployInstance event) {
 		if (event == null) {
 			return true;
 		}
@@ -52,7 +54,7 @@ public class JenkinsPublisher implements Publisher<Long> {
 	}
 
 	@Override
-	public void subscribe(Subscriber<? super Long> s) {
+	public void subscribe(Subscriber<? super DeployInstance> s) {
 		publishedFlux.subscribe(s);
 	}
 

@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum InstanceStatus {
 
-	UP, DOWN, DEPLOYING, STARTING, SHUTDOWN, DEPLOY_FAILED;
+	UP, DOWN, ENDED, DEPLOYING, STARTING, SHUTDOWN, DEPLOY_FAILED;
 
 	@JsonValue
 	public int toValue() {

@@ -46,10 +46,11 @@ export default {
       status: [
         { id: 0, name: "运行中"},
         { id: 1, name: "关闭"},
-        { id: 2, name: "部署中"},
-        { id: 3, name: "启动中"},
-        { id: 4, name: "关闭中"},
-        { id: 5, name: "部署失败"}
+        { id: 2, name: "操作结束"},
+        { id: 3, name: "部署中"},
+        { id: 4, name: "启动中"},
+        { id: 5, name: "关闭中"},
+        { id: 6, name: "部署失败"}
       ],
       loaded: false,
       titleKey: 'app',

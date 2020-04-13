@@ -37,7 +37,7 @@
 
     <a-table :columns="columns" :dataSource="applications" :childrenColumnName="childName" :rowKey="(record) => record.instances ? record.id : record.sbaId">
       <span slot="status" slot-scope="text, record">
-        <template v-if="record.buildInfo && record.buildInfo.status < 2">
+        <template v-if="record.buildInfo && record.buildInfo.status < 3">
           {{ record.statusInfo.status }}
         </template>
         <template v-else-if="record.instances">
@@ -317,43 +317,43 @@ import Vue from 'vue'
       doShutdown(instance) {
         if (instance.instances) {
           instance.instances.forEach((instance) =>{
-            instance.buildInfo.status = 4;
+            instance.buildInfo.status = 5;
           });
           const instanceIds = instance.instances.filter((instance) => instance.sbaId).map((instance) => {
             return {'instanceId': instance.sbaId, 'deployInstanceId': instance.id}
           });
           this.deploy.doShutdown(instanceIds)
         } else {
-          instance.buildInfo.status = 4;
+          instance.buildInfo.status = 5;
           const shutdownRequest = {'instanceId': instance.sbaId, 'deployInstanceId': instance.id};
           this.deploy.doShutdown([shutdownRequest])
         }
       },
       doRollback(instance) {
-        instance.buildInfo.status = 2;
+        instance.buildInfo.status = 3;
         this.deploy.doRollback(instance.id)
       },
       doStart(instance) {
         if (instance.instances) {
           instance.instances.forEach((instance) =>{
-            instance.buildInfo.status = 3;
+            instance.buildInfo.status = 4;
           });
           const instanceIds = instance.instances.map((instance) => instance.id);
           this.deploy.doStart(instanceIds)
         } else {
-          instance.buildInfo.status = 3;
+          instance.buildInfo.status = 4;
           this.deploy.doStart([instance.id])
         }
       }, 
       doBuild(instance) {
         if (instance.instances) {
           instance.instances.forEach((instance) =>{
-            instance.buildInfo.status = 2;
+            instance.buildInfo.status = 3;
           });
           const instanceIds = instance.instances.map((instance) => instance.id);
           this.deploy.doBuild(instanceIds)
         } else {
-          instance.buildInfo.status = 2;
+          instance.buildInfo.status = 3;
           this.deploy.doBuild(instance.id)
         }
       }, 

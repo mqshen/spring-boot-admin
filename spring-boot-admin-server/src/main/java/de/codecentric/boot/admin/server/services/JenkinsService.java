@@ -19,6 +19,7 @@ package de.codecentric.boot.admin.server.services;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,6 +41,9 @@ import org.springframework.util.StringUtils;
 
 import de.codecentric.boot.admin.server.config.JenkinsProperties;
 import de.codecentric.boot.admin.server.domain.DeployInstance;
+import de.codecentric.boot.admin.server.domain.InstanceStatus;
+import de.codecentric.boot.admin.server.domain.MicroService;
+import de.codecentric.boot.admin.server.domain.entities.Instance;
 import de.codecentric.boot.admin.server.domain.values.JenkinsBuild;
 import de.codecentric.boot.admin.server.repositories.DeployInstanceRepository;
 
@@ -59,6 +63,9 @@ public class JenkinsService {
 	@Autowired
 	private JenkinsProperties jenkinsProperties;
 
+	@Autowired
+	private DeployService deployService;
+
 	@Value("${eureka.client.serviceUrl.defaultZone}")
 	private String eurekaAddress;
 
@@ -73,6 +80,10 @@ public class JenkinsService {
 		listenerJenkins.add(deployId);
 	}
 
+	public void startListener(List<Long> instances) {
+		listenerJenkins.addAll(instances);
+	}
+
 	public void stopListener(Long deployId) {
 		listenerJenkins.remove(deployId);
 	}
@@ -80,7 +91,22 @@ public class JenkinsService {
 	@Scheduled(fixedRate = 5000)
 	public void syncJenkinsState() {
 		try {
-			listenerJenkins.stream().forEach((deployId) -> jenkinsPublisher.append(deployId));
+			listenerJenkins.stream().forEach((deployId) -> {
+				DeployInstance deployInstance = deployService.getDeployInstance(deployId);
+				if (InstanceStatus.SHUTDOWN.equals(deployInstance.getStatus())) {
+					Instance instance = deployService.getInstance(deployId);
+					if (instance == null || !instance.getStatusInfo().isUp()) {
+						deployInstance.setStatus(InstanceStatus.ENDED);
+					}
+				}
+				else {
+					MicroService microService = deployService.getMicroService(deployInstance.getServiceId());
+					getBuild(microService.getJobName(), deployInstance);
+				}
+				if (InstanceStatus.ENDED.equals(deployInstance.getStatus())) {
+					jenkinsPublisher.append(deployInstance);
+				}
+			});
 		}
 		catch (Exception ex) {
 			LOGGER.error("failed scheduleFixedRateTask task", ex);
@@ -129,18 +155,26 @@ public class JenkinsService {
 				QueueReference queueReference = new QueueReference(reference);
 				queueItem = jenkinsServer.getQueueItem(queueReference);
 
-				if (!queueItem.isCancelled() && jobWithDetails.isInQueue()) {
+				if (jobWithDetails.isInQueue() && !queueItem.isCancelled()) {
 					return Pair.of(Optional.empty(), queueItem != null);
 				}
-				build = jenkinsServer.getBuild(queueItem);
+				if (queueItem != null) {
+					build = jenkinsServer.getBuild(queueItem);
+				}
 			}
 			else if (!StringUtils.isEmpty(deployInstance.getLastBuildId())) {
 				build = jobWithDetails.getBuildByNumber(Integer.parseInt(deployInstance.getLastBuildId()));
 			}
 			if (build == null) {
+				deployInstance.setStatus(InstanceStatus.ENDED);
 				return Pair.of(Optional.empty(), queueItem != null);
 			}
 			else {
+				if (!build.details().isBuilding() && queueItem == null) {
+					deployInstance.setStatus(InstanceStatus.ENDED);
+					stopListener(deployInstance.getId());
+				}
+				updateDeployBuildId(deployInstance, build.details().getId());
 				return Pair.of(Optional.of(build), queueItem != null);
 			}
 		}
@@ -151,9 +185,11 @@ public class JenkinsService {
 	}
 
 	private void updateDeployBuildId(DeployInstance deployInstance, String buildId) {
-		deployInstance.setLastBuildId(buildId);
-		deployInstance.setQueueId("");
-		deployInstanceRepository.save(deployInstance);
+		if (deployInstance.getLastBuildId() != null && !buildId.equals(deployInstance.getLastBuildId())) {
+			deployInstance.setLastBuildId(buildId);
+			deployInstance.setQueueId("");
+			deployInstanceRepository.save(deployInstance);
+		}
 	}
 
 	public boolean stopBuild(String jobName, DeployInstance deployInstance) {
@@ -162,8 +198,6 @@ public class JenkinsService {
 			Optional<Build> build = pair.getFirst();
 			try {
 				if (build.isPresent()) {
-					BuildWithDetails buildWithDetails = build.get().details();
-					updateDeployBuildId(deployInstance, buildWithDetails.getId());
 					build.get().Stop(true);
 					return true;
 				}

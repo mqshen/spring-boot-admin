@@ -19,14 +19,12 @@ package de.codecentric.boot.admin.server.services;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -52,13 +50,13 @@ import reactor.core.publisher.Mono;
 
 import de.codecentric.boot.admin.server.domain.DeployInstance;
 import de.codecentric.boot.admin.server.domain.DeployServer;
+import de.codecentric.boot.admin.server.domain.InstanceStatus;
 import de.codecentric.boot.admin.server.domain.MicroService;
 import de.codecentric.boot.admin.server.domain.Operation;
 import de.codecentric.boot.admin.server.domain.OperationType;
 import de.codecentric.boot.admin.server.domain.entities.DeployApplication;
 import de.codecentric.boot.admin.server.domain.entities.DeployInstanceInfo;
 import de.codecentric.boot.admin.server.domain.entities.Instance;
-import de.codecentric.boot.admin.server.domain.values.BuildRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployInstanceRequest;
 import de.codecentric.boot.admin.server.domain.values.DeployServerRequest;
 import de.codecentric.boot.admin.server.domain.values.EnvironmentInfo;
@@ -165,6 +163,9 @@ public class DeployService {
 	protected void initDeployInstance() {
 		deployInstances = StreamSupport.stream(deployInstanceRepository.findAll().spliterator(), true)
 				.collect(Collectors.toMap(DeployInstance::getId, Function.identity()));
+
+		deployInstances.values().stream().filter((deployInstance) -> deployInstance.getStatus().ordinal() > 2)
+				.forEach((deployInstance) -> jenkinsService.startListener(deployInstance.getId()));
 	}
 
 	@PostConstruct
@@ -215,11 +216,14 @@ public class DeployService {
 	}
 
 	public Flux<DeployInstanceInfo> getAllApplicationStream() {
+		Flux<DeployInstanceInfo> buildFlux = Flux.from(jenkinsService.getJenkinsPublisher())
+				.map((deployInstance) -> generateDeployInstanceInfo(deployInstance));
 		return Flux.from(registry.getInstanceEventPublisher())
 				.flatMap((event) -> this.instanceRegistry.getInstance(event.getInstance()))
 				.map((instance) -> getDeployInstance(instance)
 						.map((deployInstance) -> generateDeployInstanceInfo(deployInstance))
-						.orElse(DeployInstanceInfo.empty()));
+						.orElse(DeployInstanceInfo.empty()))
+				.mergeWith(buildFlux);
 	}
 
 	public List<DeployApplication> getAllApplication() {
@@ -251,12 +255,12 @@ public class DeployService {
 		return startBuild(deployId, false, false);
 	}
 
-	public String start(List<Long> deployIdArray) throws URISyntaxException {
+	public String start(List<Long> deployIdArray) {
 		try {
 			return startBuild(deployIdArray, true);
 		}
-		catch (URISyntaxException e) {
-			LOGGER.error("failed start instance ", e);
+		catch (URISyntaxException ex) {
+			LOGGER.error("failed start instance ", ex);
 			return "";
 		}
 	}
@@ -280,12 +284,24 @@ public class DeployService {
 			if (onlyStart) {
 				param.put("onlyStart", "true");
 			}
-			else  {
+			else {
 				param.put("onlyStart", "false");
 			}
 			param.put("deployPath", microService.getPath());
 			param.put("profile", microService.getProfile());
 			param.put("port", String.valueOf(microService.getPort()));
+
+			instances.stream().forEach((instanceId) -> {
+				DeployInstance instance = deployInstances.get(instanceId);
+				if (instance != null) {
+					if (onlyStart) {
+						instance.setStatus(InstanceStatus.STARTING);
+					}
+					else {
+						instance.setStatus(InstanceStatus.DEPLOYING);
+					}
+				}
+			});
 
 			Pair<String, String> stream = instances.stream().map((instanceId) -> {
 				DeployInstance instance = deployInstances.get(instanceId);
@@ -310,6 +326,8 @@ public class DeployService {
 				String itemUrl = jenkinsService.sendBuild(microService.getJobName(), param);
 				deployInstance.setQueueId(itemUrl);
 				deployInstanceRepository.save(deployInstance);
+
+				jenkinsService.startListener(instances);
 				return itemUrl;
 			}
 			catch (IOException ex) {
@@ -359,9 +377,11 @@ public class DeployService {
 				}
 
 				if (onlyStart) {
+					deployInstance.setStatus(InstanceStatus.STARTING);
 					param.put("onlyStart", "true");
 				}
 				else {
+					deployInstance.setStatus(InstanceStatus.DEPLOYING);
 					param.put("onlyStart", "false");
 				}
 
@@ -378,6 +398,7 @@ public class DeployService {
 				String itemUrl = jenkinsService.sendBuild(microService.getJobName(), param);
 				deployInstance.setQueueId(itemUrl);
 				deployInstanceRepository.save(deployInstance);
+				jenkinsService.startListener(instanceId);
 				return itemUrl;
 			}
 			catch (IOException ex) {
@@ -518,18 +539,26 @@ public class DeployService {
 				deployInstance.getProfile(), statusInfo, jenkinsBuild, operationInfo);
 	}
 
+	public Instance getInstance(Long deployInstanceId) {
+		return instanceMap.get(deployInstanceId);
+	}
+
 	public Mono<List<Boolean>> shutdown(List<Shutdown> instances) {
 		Stream<Mono<Boolean>> mono = instances.stream().map((instance) -> {
 			Operation operation = new Operation(instance.getDeployInstanceId(), OperationType.DEPLOY);
 			operationRepository.save(operation);
 
+			DeployInstance deployInstance = deployInstances.get(instance.getDeployInstanceId());
+			deployInstance.setStatus(InstanceStatus.SHUTDOWN);
+			jenkinsService.startListener(instance.getDeployInstanceId());
+
 			URI uri = UriComponentsBuilder.fromPath("/shutdown").build(true).toUri();
 			Mono<Instance> instanceMono = this.instanceRegistry.getInstance(InstanceId.of(instance.getInstanceId()));
 			Mono<ClientResponse> clientResponseMono = instanceWebProxy.forward(instanceMono, uri, HttpMethod.POST,
-				new HttpHeaders(), BodyInserters.empty());
+					new HttpHeaders(), BodyInserters.empty());
 			return clientResponseMono.map((response) -> response.statusCode().equals(HttpStatus.OK));
 		});
-		Mono<List<Boolean>> result = Flux.fromStream(mono).flatMap(x -> x).collectList();
+		Mono<List<Boolean>> result = Flux.fromStream(mono).flatMap((x) -> x).collectList();
 		return result;
 	}
 
@@ -552,4 +581,13 @@ public class DeployService {
 		return StreamSupport.stream(groupRepository.findAll().spliterator(), true)
 				.map((group) -> GroupInfo.fromEntity(group)).collect(Collectors.toList());
 	}
+
+	public DeployInstance getDeployInstance(Long instanceId) {
+		return deployInstances.get(instanceId);
+	}
+
+	public MicroService getMicroService(Long serviceId) {
+		return microServices.get(serviceId);
+	}
+
 }

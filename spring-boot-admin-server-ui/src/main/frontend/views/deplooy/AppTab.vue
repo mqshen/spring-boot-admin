@@ -183,7 +183,8 @@ import Vue from 'vue'
       title: '操作',
       dataIndex: 'action',
       width: '18%',
-      scopedSlots: { customRender: 'action' }
+      scopedSlots: { customRender: 'action' },
+      align: 'right'
     }
   ];
 

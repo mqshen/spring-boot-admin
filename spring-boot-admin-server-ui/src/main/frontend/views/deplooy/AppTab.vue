@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="appTabDiv">
     <div class="table-page-search-wrapper">
       <a-form layout="inline">
         <a-row :gutter="48">
@@ -231,7 +231,7 @@ import Vue from 'vue'
         queryParam:{
           eve: -1,
           service: '',
-          group: -1 
+          group: -1
         }
       }
     },
@@ -327,7 +327,7 @@ import Vue from 'vue'
       doStart(instance) {
         instance.buildInfo.status = 3;
         this.deploy.doStart(instance.id)
-      }, 
+      },
       doBuild(instance) {
         if (instance.instances) {
           instance.instances.forEach((instance) =>{
@@ -339,10 +339,10 @@ import Vue from 'vue'
           instance.buildInfo.status = 2;
           this.deploy.doBuild(instance.id)
         }
-      }, 
+      },
       showDisplay(id, list) {
         const item = list.find((item) => {return item.id == id});
-        if (item) 
+        if (item)
           return item.name;
         return ''
       }
@@ -350,7 +350,7 @@ import Vue from 'vue'
   }
 </script>
 <style scoped>
-  .appTabDiv >>> .ant-table-body .ant-table-thead .ant-table-row-cell-last {
+  .appTabDiv >>> .ant-table-thead > tr:first-child > th:last-child {
     text-align: center !important;
   }
 </style>

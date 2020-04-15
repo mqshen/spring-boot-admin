@@ -6,50 +6,43 @@
     @ok="handleSubmit"
     :afterClose="handleClose">
     <a-form :form="form">
-      <a-card :bordered="false">
-        <a-form-item v-bind="formItemLay" label="ID" style="display:none">
-          <a-input v-decorator="['id']"/>
-        </a-form-item>
-        <a-form-item v-bind="formItemLay" label="环境">
-          <a-select v-decorator="['environment.id']">
-            <a-select-option :value="0">DEV</a-select-option>
-            <a-select-option :value="1">UAT</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item v-bind="formItemLay" label="主机名">
-          <a-input v-decorator="['name']"/>
-        </a-form-item>
-        <a-form-item v-bind="formItemLay" label="IP地址">
-          <a-input v-decorator="['ip']" />
-        </a-form-item>
-        <a-form-item v-bind="formItemLay" label="SSH登录">
-          <a-radio-group v-decorator="['loginType']">
-            <a-radio :value="0">用户名密码</a-radio>
-            <a-radio :value="1">证书</a-radio>
-          </a-radio-group>
-        </a-form-item>
-        <a-form-item v-bind="formItemLay" label="用户名">
-          <a-input v-decorator="['user',{rules:[{required:true}]}]" />
-        </a-form-item>
-        <a-form-item v-bind="formItemLay" label="登录密码">
-          <a-input-password v-decorator="['password',{rules:[{required:true}]}]" />
-        </a-form-item>
-      </a-card>
+      <a-form-item v-bind="formItemLay" label="ID" style="display:none">
+        <a-input v-decorator="['id']"/>
+      </a-form-item>
+      <a-form-item v-bind="formItemLay" label="环境">
+        <a-select v-decorator="['environmentId']">
+          <a-select-option :value="0">DEV</a-select-option>
+          <a-select-option :value="1">UAT</a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item v-bind="formItemLay" label="主机名">
+        <a-input v-decorator="['name']"/>
+      </a-form-item>
+      <a-form-item v-bind="formItemLay" label="IP地址">
+        <a-input v-decorator="['ip']" />
+      </a-form-item>
+      <a-form-item v-bind="formItemLay" label="SSH登录">
+        <a-radio-group v-decorator="['loginType']">
+          <a-radio :value="0">用户名密码</a-radio>
+          <a-radio :value="1">证书</a-radio>
+        </a-radio-group>
+      </a-form-item>
+      <a-form-item v-bind="formItemLay" label="用户名">
+        <a-input v-decorator="['user',{rules:[{required:true}]}]" />
+      </a-form-item>
+      <a-form-item v-bind="formItemLay" label="登录密码">
+        <a-input-password v-decorator="['password',{rules:[{required:true}]}]" />
+      </a-form-item>
     </a-form>
   </a-modal>
 </template>
 
 <script>
 import pick from 'lodash.pick'
-import Deploy from '@/services/deploy'
+/* import Deploy from '@/services/deploy' */
+import { doAddDeployServer } from '@/api/deploy.js'
 
 export default {
-  props: {
-    deploy: {
-      type: Deploy,
-      required: true
-    },
-  },
   name: 'ServerModal',
   data () {
     return {
@@ -80,13 +73,13 @@ export default {
     handleSubmit () {
       this.form.validateFields((err, values) => {
         if (!err) {
-          const requestParameter = Object.assign({environmentId: values.environment.id}, values)
-          window.console.log('Received values of form: ', requestParameter, this.deploy)
-          this.deploy.doAddDeployServer(requestParameter).then(() => {
-            this.visible = false;
-          });
+          const requestParameter = values
+          window.console.log('Received values of form: ', requestParameter)
+          doAddDeployServer(requestParameter).then(() => {
+            this.visible = false
+          })
         } else {
-          window.console.log(err);
+          window.console.log(err)
         }
       })
     },
@@ -95,7 +88,7 @@ export default {
       this.mdl = {}
       this.form.resetFields()
     },
-    add() {
+    add () {
       this.visible = true
     },
     edit (record) {
@@ -104,7 +97,7 @@ export default {
       _this.visible = true
       _this.$nextTick(() => {
         setTimeout(() => {
-          _this.form.setFieldsValue(pick(_this.mdl, 'id', 'environment.id', 'name', 'ip',
+          _this.form.setFieldsValue(pick(_this.mdl, 'id', 'environmentId', 'name', 'ip',
             'loginType', 'user'))
         })
       })

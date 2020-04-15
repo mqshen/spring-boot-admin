@@ -15,7 +15,14 @@
             <a-input v-decorator="['name',{rules:[{required:true}]}]" />
           </a-form-item>
           <a-form-item v-bind="formItemLay" label="Jenkins任务">
-            <a-input v-decorator="['jobName',{rules:[{required:true}]}]" />
+            <a-row :gutter="8">
+              <a-col :span="18">
+                <a-input v-decorator="['jobName',{rules:[{required:true}]}]" />
+              </a-col>
+              <a-col :span="6">
+                <a-button >检测</a-button>
+              </a-col>
+            </a-row>
           </a-form-item>
           <a-form-item v-bind="formItemLay" label="工程名称">
             <a-input v-decorator="['projectName',{rules:[{required:true}]}]" />
@@ -65,20 +72,11 @@
 
 <script>
 import pick from 'lodash.pick'
-import Deploy from '@/services/deploy'
+/* import Deploy from '@/services/deploy' */
+import { doAddService } from '@/api/deploy.js'
 
 export default {
   name: 'AppModal',
-  props: {
-    regionMap: {
-      type: Array,
-      default: () => []
-    },
-    deploy: {
-      type: Deploy,
-      required: true
-    },
-  },
   data () {
     return {
       formItemLay: {
@@ -108,12 +106,12 @@ export default {
     handleSubmit () {
       this.form.validateFields((err, values) => {
         if (!err) {
-          window.console.log('Received values of form: ', values)
           const requestParameter = Object.assign({}, values)
-          window.console.log('Received values of form: ', requestParameter, this.deploy)
-          this.deploy.doAddService(requestParameter).then(() => {
-            this.visible = false;
-          });
+          window.console.log('Received values of form: ', requestParameter)
+          doAddService(requestParameter).then(() => {
+            this.visible = false
+            this.$emit('handleOk')
+          })
         }
       })
     },

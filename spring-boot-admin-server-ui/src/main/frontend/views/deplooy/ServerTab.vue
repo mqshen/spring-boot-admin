@@ -5,7 +5,7 @@
         <a-row :gutter="48">
           <a-col :md="7" :sm="24">
             <a-form-item label="环境">
-              <a-select v-model="queryParam.eve" placeholder="请选择" default-value="0" class="ifp-selector">
+              <a-select v-model="queryParam.eve" placeholder="请选择" class="ifp-selector">
                 <a-select-option :value="-1"> 全部 </a-select-option>
                 <a-select-option v-for="environment in environments" :key="environment.id" :value="environment.id">{{ environment.name }}</a-select-option>
               </a-select>
@@ -13,7 +13,7 @@
           </a-col>
           <a-col :md="7" :sm="24">
             <a-form-item label="数据中心">
-              <a-select v-model="queryParam.group" placeholder="请选择" default-value="0">
+              <a-select v-model="queryParam.group" placeholder="请选择">
                 <a-select-option :value="-1"> 全部 </a-select-option>
                 <a-select-option value="userCenter"> userCenter </a-select-option>
                 <a-select-option value="customCenter"> customCenter </a-select-option>
@@ -31,13 +31,17 @@
       </a-form>
     </div>
 
-    <a-table :columns="columns" :dataSource="serverInstances" :childrenColumnName="childName" :rowKey="(record) => record.url || record.id">
+    <a-table
+      :columns="columns"
+      :loading="loading"
+      :dataSource="serverInstances"
+      :childrenColumnName="childName"
+      :rowKey="(record) => record.url || record.id">
       <span slot="status" slot-scope="text, record">
         <template v-if="record.buildInfo && !(record.buildInfo.queued || record.buildInfo.building)">
-          {{ record.statusInfo.status }}
+          {{ record.statusInfo.status | finalStatus }}
         </template>
-        <template v-else>
-        </template>
+        <template v-else />
       </span>
       <span slot="name" slot-scope="text, record">
         <template v-if="record.instances">
@@ -49,7 +53,7 @@
           {{ record.instances.length }}
         </template>
         <template v-else>
-          {{ text }}
+          {{ record.name }}
         </template>
       </span>
       <span slot="ip" slot-scope="text, record">
@@ -73,129 +77,125 @@
         </template>
       </span>
     </a-table>
-    <server-modal ref="modal" :deploy="deploy"/>
+    <server-modal ref="modal" />
   </div>
 </template>
 <script>
-  import ServerModal from './page/ServerModal.vue'
-  import Deploy from '@/services/deploy'
-  const columns = [
-    {
-      title: '服务器',
-      dataIndex: 'name',
-      scopedSlots: {customRender: 'name'}
+import ServerModal from './page/ServerModal.vue'
+/* import Deploy from '@/services/deploy' */
+import { queryServers } from '@/api/deploy.js'
+import { filters } from './filters.js'
+const columns = [
+  {
+    title: '服务器',
+    dataIndex: 'name',
+    scopedSlots: { customRender: 'name' },
+    width: '20%'
+  },
+  {
+    title: '应用',
+    dataIndex: 'appName',
+    scopedSlots: { customRender: 'instance' }
+  },
+  {
+    title: 'IP/URL',
+    dataIndex: 'ip',
+    scopedSlots: { customRender: 'ip' },
+    width: '20%'
+  },
+  {
+    title: '运行状态',
+    dataIndex: 'status',
+    width: '15%',
+    scopedSlots: { customRender: 'status' }
+  },
+  {
+    title: '环境',
+    dataIndex: 'environmentId',
+    width: '10%',
+    scopedSlots: { customRender: 'recordInfo' }
+  },
+  {
+    title: '操作',
+    dataIndex: 'action',
+    width: '10%',
+    scopedSlots: { customRender: 'action' }
+  }
+]
+
+export default {
+  components: {
+    ServerModal
+  },
+  props: {
+    environments: {
+      type: Array,
+      default: () => []
     },
-    {
-      title: '应用',
-      dataIndex: 'name',
-      scopedSlots: {customRender: 'instance'}
-    },
-    {
-      title: 'IP/URL',
-      dataIndex: 'ip',
-      scopedSlots: {customRender: 'ip'},
-      width: '20%',
-    },
-    {
-      title: '运行状态',
-      dataIndex: 'status',
-      width: '15%',
-      scopedSlots: {customRender: 'status'}
-    },
-    {
-      title: '环境',
-      dataIndex: 'environmentId',
-      width: '10%',
-      scopedSlots: {customRender: 'recordInfo'}
-    },
-    {
-      title: '操作',
-      dataIndex: 'action',
-      width: '10%',
-      scopedSlots: { customRender: 'action' }
+    instances: {
+      type: Array,
+      required: true
     }
-  ];
-
-  export default {
-    components: {
-      ServerModal
-    },
-    props: {
-      deploy: {
-        type: Deploy,
-        required: true
+  },
+  data () {
+    return {
+      childName: 'instances',
+      serverInstances: [],
+      allServers: [],
+      loading: true,
+      columns,
+      queryParam: {
+        eve: -1,
+        server: '',
+        group: -1
       },
-      groups: {
-        type: Array,
-        default: () => [],
-      },
-      environments: {
-        type: Array,
-        default: () => [],
-      },
-      servers: {
-        type: Array,
-        default: () => [],
-      },
-      instances: {
-        type: Array,
-        required: true
-      }
-    },
-    data() {
-      return {
-        childName: 'instances',
-        serverInstances: [],
-        allServers: [],
-        columns,
-        queryParam:{
-          eve: -1,
-          server: '',
-          group: -1
-        }
-      }
-    },
-    mounted() {
-      this.deploy.queryServers().then((res) =>{
-        const servers = res.data.map((server) => {
-          const instances = server.children.map((id) => {
-            return this.instances.find((instance) => {return instance.id == id});
-          })
-          server.instances = instances;
-          return server;
+      servers: []
+    }
+  },
+  filters: filters,
+  mounted () {
+    queryServers().then((res) => {
+      const servers = res.data.map((server) => {
+        const instances = server.children.map((id) => {
+          return this.instances.find((instance) => { return instance.id === id })
         })
-        this.allServers = servers;
-        this.filterServer();
-      });
-    },
-    methods: {
-      handleOk() {
+        server.instances = instances
+        return server
+      })
+      this.allServers = servers
+      this.filterServer()
+    })
+  },
+  methods: {
+    handleOk () {
 
-      },
-      addEvent () {
-        this.$refs.modal.add()
-      },
-      doTest(record) {
-        window.console.log(record);
-      },
-      modifyServer(record) {
-        this.$refs.modal.edit(record);
-      },
-      showDisplay(id, list) {
-        const item = list.find((item) => {return item.id == id});
-        if (item) 
-          return item.name;
-        return ''
-      },
-      filterServer() {
-        const servers = this.allServers.filter((server) => {
-          if(this.queryParam.eve && this.queryParam.eve > 0) {
-            return server.environmentId == this.queryParam.eve;
-          }
-          return true;
-        });
-        this.serverInstances = servers;
-      },
+    },
+    addEvent () {
+      this.$refs.modal.add()
+    },
+    doTest (record) {
+      window.console.log(record)
+    },
+    modifyServer (record) {
+      this.$refs.modal.edit(record)
+    },
+    showDisplay (id, list) {
+      const item = list.find((item) => { return item.id === id })
+      if (item) {
+        return item.name
+      }
+      return ''
+    },
+    filterServer () {
+      const servers = this.allServers.filter((server) => {
+        if (this.queryParam.eve && this.queryParam.eve > 0) {
+          return server.environmentId === this.queryParam.eve
+        }
+        return true
+      })
+      this.serverInstances = servers
+      this.loading = false
     }
   }
+}
 </script>

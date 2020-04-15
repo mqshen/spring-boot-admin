@@ -6,11 +6,15 @@
     @tabChange="key => handleTabChange(key, 'titleKey')"
   >
     <a-button type="primary" icon="plus" slot="tabBarExtraContent" @click="handleAdd()">
-      {{ titleKey |changeTitle }}
+      {{ titleKey | changeTitle }}
     </a-button>
-    <template v-if="loaded"> 
-      <app-tab v-if="titleKey === 'app'" :status="status" :servers="servers" :groups="groups" :environments="environments" :instances="instances" :deploy="deploy" ref="app"></app-tab>
-      <server-tab v-else :instances="instances" :deploy="deploy" :environments="environments" ref="ser"></server-tab>
+    <template v-if="loaded">
+      <app-tab
+        v-if="titleKey === 'app'"
+        :instances="instances"
+        :environments="environments"
+        ref="app" />
+      <server-tab v-else :instances="instances" :environments="environments" ref="ser" />
     </template>
     <template v-else>
       <a-spin/>
@@ -20,13 +24,14 @@
 
 <script>
 import './common.js'
-import 'ant-design-vue/dist/antd.css';
+import 'ant-design-vue/dist/antd.css'
 import AppTab from './AppTab'
 import ServerTab from './ServerTab'
-import Deploy from '@/services/deploy'
+/* import Deploy from '@/services/deploy' */
+import { listInstacne, listEnvironments } from '@/api/deploy.js'
 
 export default {
-  name: 'deploy',
+  name: 'Deploy',
   components: {
     AppTab,
     ServerTab
@@ -43,39 +48,21 @@ export default {
           tab: '服务器'
         }
       ],
-      status: [
-        { id: 0, name: "运行中"},
-        { id: 1, name: "关闭"},
-        { id: 2, name: "操作结束"},
-        { id: 3, name: "部署中"},
-        { id: 4, name: "启动中"},
-        { id: 5, name: "关闭中"},
-        { id: 6, name: "部署失败"}
-      ],
       loaded: false,
       titleKey: 'app',
-      servers: [],
-      deploy: new Deploy(),
       instances: [],
-      groups: [],
       environments: []
     }
   },
-  mounted() {
-    this.deploy.listServers().then((res) => {
-      this.servers = res.data;
-    });
-    this.deploy.listGroups().then((res) => {
-      this.groups = res.data;
-    });
-    this.deploy.listEnvironments().then((res) => {
-      this.environments = res.data;
-    });
-    this.deploy.listInstacne().then((res) => {
-      this.instances = res.data;
-      this.loaded = true;
-    });
-    this.onChange();
+  mounted () {
+    listEnvironments().then((res) => {
+      this.environments = res.data
+    })
+    listInstacne().then((res) => {
+      this.instances = res.data
+      this.loaded = true
+    })
+    // this.onChange()
   },
   filters: {
     changeTitle (key) {
@@ -97,37 +84,37 @@ export default {
         this.$refs.ser.addEvent()
       }
     },
-    onChange() {
-      const eventSource = new EventSource('deploy');
+    onChange () {
+      const eventSource = new EventSource('deploy')
       eventSource.onmessage = (message) => {
         this.transformResponse(message.data, false)
       }
       eventSource.onerror = (err) => {
-        window.console.log(err);
+        window.console.log(err)
       }
     },
-    processInstance(data, onlyJenkins) {
+    processInstance (data, onlyJenkins) {
       this.instances.forEach((instance) => {
-        if (instance.id == data.id) {
+        if (instance.id === data.id) {
           if (onlyJenkins) {
-            Object.assign(instance.buildInfo, data.buildInfo);
+            Object.assign(instance.buildInfo, data.buildInfo)
           } else {
-            Object.assign(instance, data);
+            Object.assign(instance, data)
           }
         }
       })
     },
-    transformResponse(data, onlyJenkins) {
+    transformResponse (data, onlyJenkins) {
       if (!data) {
-        return data;
+        return data
       }
-      const json = JSON.parse(data);
+      const json = JSON.parse(data)
       if (json instanceof Array) {
         json.forEach((instance) => {
-          this.processInstance(instance, onlyJenkins);
-        });
+          this.processInstance(instance, onlyJenkins)
+        })
       } else {
-        this.processInstance(json, onlyJenkins);
+        this.processInstance(json, onlyJenkins)
       }
     }
   },
@@ -138,7 +125,7 @@ export default {
       label: 'deploy.label',
       order: 300,
       component: this
-    });
+    })
   }
 }
 </script>

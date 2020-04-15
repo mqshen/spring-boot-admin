@@ -10,16 +10,11 @@
 </template>
 
 <script>
-import Deploy from '@/services/deploy'
+/* import Deploy from '@/services/deploy' */
+import { queryBuildLog } from '@/api/deploy.js'
 
 export default {
   name: 'BuildLog',
-  props: {
-    deploy: {
-      type: Deploy,
-      required: true
-    },
-  },
   data () {
     return {
       visible: false,
@@ -30,30 +25,21 @@ export default {
     handleClose () {
       this.visible = false
     },
-    handleSubmit() {
+    handleSubmit () {
       this.visible = false
     },
-    show(instanceId) {
-      this.visible = true;
+    show (instanceId) {
+      this.visible = true
       this.queryLog(instanceId)
     },
     queryLog (instanceId) {
-      this.deploy.queryBuildLog(instanceId).then((res) => {
-          this.buildLog = res.data;
-          if (this.visible) {
-            setTimeout(() => this.queryLog(instanceId), 3000);
-          }
-      });
+      queryBuildLog(instanceId).then((res) => {
+        this.buildLog = res.data
+        if (this.visible) {
+          setTimeout(() => this.queryLog(instanceId), 3000)
+        }
+      })
     }
   }
 }
 </script>
-
-<style scoped >
-.ant-card-grid {
-  box-shadow:none;
-}
-.ant-card-grid .ant-form-item {
-  margin-bottom:0px;
-}
-</style>

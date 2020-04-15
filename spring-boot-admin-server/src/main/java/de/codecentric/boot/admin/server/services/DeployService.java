@@ -573,7 +573,7 @@ public class DeployService {
 				String refreshUrl = "/bus-refresh/" + microService.getName() + ":" + deployServer.getIp();
 				URI uri = UriComponentsBuilder.fromPath(refreshUrl).build(true).toUri();
 				Mono<ClientResponse> clientResponseMono = instanceWebProxy.forward(instance, uri, HttpMethod.POST,
-					new HttpHeaders(), BodyInserters.empty());
+						new HttpHeaders(), BodyInserters.empty());
 				return clientResponseMono.map((response) -> response.statusCode().equals(HttpStatus.OK));
 			}).flatMap((x) -> x);
 		}

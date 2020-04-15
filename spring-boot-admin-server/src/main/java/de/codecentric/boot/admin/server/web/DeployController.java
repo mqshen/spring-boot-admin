@@ -139,6 +139,11 @@ public class DeployController {
 		return deployService.stopBuild(deployId);
 	}
 
+	@PostMapping(path = "/deploy/refresh/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Flux<Boolean> doRefreshProfile(@PathVariable("deployId") Long deployId) {
+		return deployService.refreshProfile(deployId);
+	}
+
 	@GetMapping(path = "/deploy/log/{deployId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public String queryBuildLog(@PathVariable("deployId") Long deployId) {
 		return deployService.getBuildLog(deployId);

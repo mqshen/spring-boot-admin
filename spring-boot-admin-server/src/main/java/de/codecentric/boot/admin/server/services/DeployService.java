@@ -475,6 +475,7 @@ public class DeployService {
 				deployInstance.setRollbackBranch(deployInstanceRequest.getRollbackBranch());
 				deployInstance.setProfile(deployInstanceRequest.getProfile());
 				deployInstanceRepository.save(deployInstance);
+				initDeployInstance();
 				return deployInstance.getId();
 			}).orElse(0L);
 		}
@@ -487,6 +488,7 @@ public class DeployService {
 				deployInstance.setRollbackBranch(deployInstanceRequest.getRollbackBranch());
 				deployInstance.setProfile(deployInstanceRequest.getProfile());
 				deployInstance = deployInstanceRepository.save(deployInstance);
+				initDeployInstance();
 				return deployInstance.getId();
 			}).orElse(0L);
 		}
@@ -562,10 +564,20 @@ public class DeployService {
 		return result;
 	}
 
-	public void refreshProfile() {
-		this.instanceRegistry.getInstances("CONFIG-SERVER").map((instance) -> {
-			URI uri = UriComponentsBuilder.fromPath("/bus-refresh").query("destination=").build(true).toUri();
-		})
+	public Flux<Boolean> refreshProfile(long deployId) {
+		DeployInstance deployInstance = deployInstances.get(deployId);
+		if (deployInstance != null) {
+			MicroService microService = microServices.get(deployInstance.getServiceId());
+			DeployServer deployServer = deployServers.get(deployInstance.getServerId());
+			return this.instanceRegistry.getInstances("CONFIG-SERVER").map((instance) -> {
+				String refreshUrl = "/bus-refresh/" + microService.getName() + ":" + deployServer.getIp();
+				URI uri = UriComponentsBuilder.fromPath(refreshUrl).build(true).toUri();
+				Mono<ClientResponse> clientResponseMono = instanceWebProxy.forward(instance, uri, HttpMethod.POST,
+					new HttpHeaders(), BodyInserters.empty());
+				return clientResponseMono.map((response) -> response.statusCode().equals(HttpStatus.OK));
+			}).flatMap((x) -> x);
+		}
+		return Flux.just(false);
 	}
 
 	public List<ServerInfo> listServers() {

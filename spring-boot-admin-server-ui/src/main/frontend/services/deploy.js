@@ -50,6 +50,10 @@ class Deploy{
         }
     }
 
+    async doProfileRefresh(deployId) {
+        return this.axios.post(uri`deploy/refresh/${deployId}`);
+    }
+
     async doRollback(deployId) {
         return this.axios.post(uri`deploy/rollback/${deployId}`);
     }

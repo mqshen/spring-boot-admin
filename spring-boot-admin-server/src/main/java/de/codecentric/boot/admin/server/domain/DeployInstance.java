@@ -73,6 +73,7 @@ public class DeployInstance {
 	public DeployInstance(Long serviceId, Long serverId) {
 		this.serviceId = serviceId;
 		this.serverId = serverId;
+		this.status = InstanceStatus.DOWN;
 	}
 
 }

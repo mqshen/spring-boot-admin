@@ -312,8 +312,14 @@ import Vue from 'vue'
       showBuildLog(instance) {
         this.$refs.logModal.show(instance.id);
       },
-      doRefesh() {
-        alert('配置刷新成功');
+      doRefesh(instance) {
+        this.deploy.doProfileRefresh(instance.id).then((res) => {
+          if (res.data) {
+            alert('配置刷新成功');
+          } else {
+            alert('配置刷新失败');
+          }
+        })
       },
       doShutdown(instance) {
         if (instance.instances) {

@@ -99,11 +99,19 @@ public class JenkinsService {
 						deployInstance.setStatus(InstanceStatus.ENDED);
 					}
 				}
+				else if (InstanceStatus.STARTING.equals(deployInstance.getStatus())) {
+					Instance instance = deployService.getInstance(deployId);
+					if (instance != null && instance.getStatusInfo().isUp()) {
+						deployInstance.setStatus(InstanceStatus.ENDED);
+					}
+				}
 				else {
 					MicroService microService = deployService.getMicroService(deployInstance.getServiceId());
 					getBuild(microService.getJobName(), deployInstance);
 				}
 				if (InstanceStatus.ENDED.equals(deployInstance.getStatus())) {
+					deployInstanceRepository.save(deployInstance);
+					stopListener(deployId);
 					jenkinsPublisher.append(deployInstance);
 				}
 			});

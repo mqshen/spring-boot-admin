@@ -562,6 +562,12 @@ public class DeployService {
 		return result;
 	}
 
+	public void refreshProfile() {
+		this.instanceRegistry.getInstances("CONFIG-SERVER").map((instance) -> {
+			URI uri = UriComponentsBuilder.fromPath("/bus-refresh").query("destination=").build(true).toUri();
+		})
+	}
+
 	public List<ServerInfo> listServers() {
 		return deployServers.values().stream().map((deployServer) -> ServerInfo.fromEntity(deployServer))
 				.collect(Collectors.toList());

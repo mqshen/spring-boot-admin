@@ -28,6 +28,7 @@ import Store from './store';
 import ViewRegistry from './viewRegistry';
 import views from './views';
 import i18n from './i18n';
+import './common.js'
 
 moment.locale(navigator.language.split('-')[0]);
 Vue.use(VueRouter);

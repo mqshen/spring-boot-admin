@@ -29,6 +29,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import de.codecentric.boot.admin.server.domain.entities.InstanceRepository;
@@ -46,6 +48,15 @@ public class SpringBootAdminServletApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SpringBootAdminServletApplication.class, args);
 	}
+
+	@Configuration
+    public static class SecurityPermitAllConfig extends WebSecurityConfigurerAdapter {
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http.authorizeRequests().anyRequest().permitAll()
+                    .and().csrf().disable();
+        }
+    }
 
 	// tag::customization-instance-exchange-filter-function[]
 	@Bean

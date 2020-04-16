@@ -35,7 +35,6 @@ import de.codecentric.boot.admin.server.utils.jackson.RegistrationDeserializer;
 import de.codecentric.boot.admin.server.utils.jackson.SanitizingMapSerializer;
 import de.codecentric.boot.admin.server.web.ApplicationsController;
 import de.codecentric.boot.admin.server.web.InstancesController;
-import de.codecentric.boot.admin.server.web.JenkinsController;
 import de.codecentric.boot.admin.server.web.client.InstanceWebClient;
 
 @Configuration(proxyBeanMethods = false)
@@ -66,12 +65,6 @@ public class AdminServerWebConfiguration {
 	@ConditionalOnMissingBean
 	public ApplicationsController applicationsController(ApplicationRegistry applicationRegistry) {
 		return new ApplicationsController(applicationRegistry);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public JenkinsController jenkinsController() {
-		return new JenkinsController();
 	}
 
 	@Configuration(proxyBeanMethods = false)

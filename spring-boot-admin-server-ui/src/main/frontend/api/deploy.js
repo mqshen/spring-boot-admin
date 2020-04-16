@@ -60,6 +60,10 @@ export function doAddService (deployRequest) {
   return axios.post(uri`deploy/service`, deployRequest)
 }
 
+export function doProfileRefresh(deployId) {
+  return this.axios.post(uri`deploy/refresh/${deployId}`);
+}
+
 export function doAddDeployInstance (instanceRequest) {
   return axios.post(uri`deploy/instance`, instanceRequest)
 }

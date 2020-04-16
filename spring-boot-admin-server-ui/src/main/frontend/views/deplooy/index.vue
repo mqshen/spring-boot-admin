@@ -17,7 +17,7 @@
       <server-tab v-else :instances="instances" :environments="environments" ref="ser" />
     </template>
     <template v-else>
-      <a-spin/>
+      <a-spin />
     </template>
   </a-card>
 </template>
@@ -62,7 +62,7 @@ export default {
       this.instances = res.data
       this.loaded = true
     })
-    // this.onChange()
+    this.onChange()
   },
   filters: {
     changeTitle (key) {
@@ -118,7 +118,7 @@ export default {
       }
     }
   },
-  install({viewRegistry}) {
+  install ({ viewRegistry }) {
     viewRegistry.addView({
       path: '/deploy',
       name: 'deploy',

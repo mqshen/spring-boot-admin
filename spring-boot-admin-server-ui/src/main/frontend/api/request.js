@@ -30,11 +30,7 @@ const err = (error) => {
 
 // response interceptor
 service.interceptors.response.use((response) => {
-  const data = response.data
-  if (data.returnCode && data.returnCode !== '000000') {
-    Modal.error({ content: data.returnMessage })
-  }
-  return data.result
+  return response;
 }, err)
 
 export {

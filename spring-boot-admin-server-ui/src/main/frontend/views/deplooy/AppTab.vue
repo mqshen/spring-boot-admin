@@ -114,8 +114,8 @@
 import AppModal from './page/AppModal.vue'
 import AppSetModal from './page/AppSetModal.vue'
 import BuildLog from './page/BuildLog.vue'
-/* import Deploy from '@/services/deploy' */
-import { fetchDeploy, listGroups, listServers } from '@/api/deploy.js'
+/* import deploy from '@/services/deploy' */
+import { fetchDeploy, listGroups, listServers, doShutdown, doRollback, doStart, doBuild } from '@/api/deploy.js'
 import { filters } from './filters.js'
 
 const columns = [
@@ -188,10 +188,11 @@ export default {
       status: [
         { id: 0, name: '运行中' },
         { id: 1, name: '关闭' },
-        { id: 2, name: '部署中' },
-        { id: 3, name: '启动中' },
-        { id: 4, name: '关闭中' },
-        { id: 5, name: '部署失败' }
+        { id: 2, name: '操作完成' },
+        { id: 3, name: '部署中' },
+        { id: 4, name: '启动中' },
+        { id: 5, name: '关闭中' },
+        { id: 6, name: '部署失败' }
       ]
     }
   },
@@ -299,28 +300,48 @@ export default {
       alert('配置刷新成功')
     },
     doShutdown (instance) {
-      instance.buildInfo.status = 4
-      const shutdownRequest = { 'instanceId': instance.sbaId, 'deployInstanceId': instance.id }
-      this.doShutdown(shutdownRequest)
+      if (instance.instances) {
+        instance.instances.forEach((instance) => {
+          instance.buildInfo.status = 5
+        })
+        const instanceIds = instance.instances.filter((instance) => instance.sbaId).map((instance) => {
+          return { 'instanceId': instance.sbaId, 'deployInstanceId': instance.id }
+        })
+
+        doShutdown(instanceIds)
+      } else {
+        instance.buildInfo.status = 5
+        const shutdownRequest = { 'instanceId': instance.sbaId, 'deployInstanceId': instance.id }
+
+        doShutdown([shutdownRequest])
+      }
     },
     doRollback (instance) {
-      instance.buildInfo.status = 2
-      this.doRollback(instance.id)
+      instance.buildInfo.status = 7
+      doRollback(instance.id)
     },
     doStart (instance) {
-      instance.buildInfo.status = 3
-      this.doStart(instance.id)
+      if (instance.instances) {
+        instance.instances.forEach((instance) => {
+          instance.buildInfo.status = 4
+        })
+        const instanceIds = instance.instances.map((instance) => instance.id)
+        doStart(instanceIds)
+      } else {
+        instance.buildInfo.status = 4
+        doStart([instance.id])
+      }
     },
     doBuild (instance) {
       if (instance.instances) {
         instance.instances.forEach((instance) => {
-          instance.buildInfo.status = 2
+          instance.buildInfo.status = 3
         })
         const instanceIds = instance.instances.map((instance) => instance.id)
-        this.doBuild(instanceIds)
+        doBuild(instanceIds)
       } else {
-        instance.buildInfo.status = 2
-        this.doBuild(instance.id)
+        instance.buildInfo.status = 3
+        doBuild(instance.id)
       }
     },
     showDisplay (id, list) {
@@ -338,4 +359,3 @@ export default {
     text-align: center !important;
   }
 </style>
-e>

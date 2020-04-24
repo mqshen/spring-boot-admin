@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import de.codecentric.boot.admin.server.ui.config.AdminServerUiProperties;
 import de.codecentric.boot.admin.server.ui.extensions.UiExtension;
 import de.codecentric.boot.admin.server.web.AdminController;
 
@@ -136,6 +137,8 @@ public class UiController {
 		private final List<String> routes;
 
 		private final List<ExternalView> externalViews;
+
+		private AdminServerUiProperties.ThirdPartUrl thirdPartUrl;
 
 	}
 

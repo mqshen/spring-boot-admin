@@ -97,6 +97,8 @@ public class AdminServerUiProperties {
 	 */
 	private Cache cache = new Cache();
 
+	private ThirdPartUrl thirdPartUrl = new ThirdPartUrl();
+
 	/**
 	 * External views shown in the navbar.
 	 */
@@ -106,6 +108,21 @@ public class AdminServerUiProperties {
 	 * Whether the option to remember a user should be available.
 	 */
 	private boolean rememberMeEnabled = true;
+
+	@lombok.Data
+	public static class ThirdPartUrl {
+
+		private String eurekaUrl = "http://ifp3_dev.cloudbills.cn/eureka";
+
+		private String hystrixUrl = "http://ifp3_dev.cloudbills.cn/hystrix";
+
+		private String zipkinUrl = "http://ifp3_dev.cloudbills.cn/zipkin";
+
+		private String kibanaUrl = "http://ifp3_dev.cloudbills.cn/kibana";
+
+		private String taskUrl = "http://ifp3_dev.cloudbills.cn/task";
+
+	}
 
 	@lombok.Data
 	public static class Cache {

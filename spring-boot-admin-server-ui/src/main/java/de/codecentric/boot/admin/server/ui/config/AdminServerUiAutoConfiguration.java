@@ -90,7 +90,7 @@ public class AdminServerUiAutoConfiguration {
 				.notificationFilterEnabled(
 						!this.applicationContext.getBeansOfType(NotificationFilterController.class).isEmpty())
 				.routes(routes).rememberMeEnabled(this.adminUi.isRememberMeEnabled())
-				.externalViews(this.adminUi.getExternalViews()).build();
+				.externalViews(this.adminUi.getExternalViews()).thirdPartUrl(this.adminUi.getThirdPartUrl()).build();
 
 		String publicUrl = (this.adminUi.getPublicUrl() != null) ? this.adminUi.getPublicUrl()
 				: this.adminServer.getContextPath();

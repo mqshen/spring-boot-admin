@@ -24,7 +24,8 @@ spring:
     name: spring-boot-admin-sample-servlet
   profiles:
     active:
-      - insecure
+      - secure
+      - dev
   boot:
     admin:
       client:
@@ -35,39 +36,8 @@ spring:
               environment: test
   jmx:
     enabled: true
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://101.251.195.186:3306/ifp_risk?characterEncoding=UTF-8&autoReconnect=true&useSSL=false
-    username: smartlife
-    password: belink!@#
-    driverClassName: com.mysql.jdbc.Driver
-    testWhileIdle: true
-    validationQuery: SELECT 1
-    hikari:
-      connection-timeout: 60000
-      maximum-pool-size: 5
-    jpa:
-      show-sql: true
-      hibernate:
-        ddl-auto: none
-        naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
-        properties:
-          hibernate:
-            dialect: org.hibernate.dialect.MySQL5Dialect
 ---
 
-eureka:
-  instance:
-    leaseRenewalIntervalInSeconds: 10
-    health-check-url-path: /actuator/health
-    metadata-map:
-      management:
-        context-path: ${server.servlet.context-path}/actuator
-      startup: ${random.int}    #needed to trigger info and endpoint update after restart
-  client:
-    registryFetchIntervalSeconds: 5
-    serviceUrl:
-      defaultZone: ${EUREKA_SERVICE_URL:http://localhost:8761}/eureka/
 # tag::customization-external-views[]
 spring:
   boot:
@@ -98,4 +68,22 @@ spring:
 
 info.tags.security: insecure
 
+---
+spring:
+  profiles: secure
+  security:
+    user:
+      name: "user"
+      password: "password"
+  boot:
+    admin:
+      client:
+        username: "user"       #These two are needed so that the client
+        password: "password"   #can register at the protected server api
+        instance:
+          metadata:
+            user.name: "user"         #These two are needed so that the server
+            user.password: "password" #can access the protected client endpoints
+
+info.tags.security: secured
 

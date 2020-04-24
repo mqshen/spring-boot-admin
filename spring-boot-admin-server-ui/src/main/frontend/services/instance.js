@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import axios, {redirectOn401} from '@/utils/axios';
+import axios from '@/utils/axios';
 import waitForPolyfill from '@/utils/eventsource-polyfill';
 import logtail from '@/utils/logtail';
 import {concat, from, ignoreElements, Observable} from '@/utils/rxjs';
@@ -27,7 +27,7 @@ const actuatorMimeTypes = [
   'application/json'
 ].join(',');
 
-const isInstanceActuatorRequest = url => url.match(/^instances[/][^/]+[/]actuator([/].*)?$/);
+//const isInstanceActuatorRequest = url => url.match(/^instances[/][^/]+[/]actuator([/].*)?$/);
 
 class Instance {
   constructor({id, ...instance}) {
@@ -37,10 +37,7 @@ class Instance {
       baseURL: uri`instances/${this.id}/`,
       headers: {'Accept': actuatorMimeTypes}
     });
-    this.axios.interceptors.response.use(
-      response => response,
-      redirectOn401(error => !isInstanceActuatorRequest(error.config.url))
-    );
+    this.axios.interceptors.response.use(response => response);
   }
 
   hasEndpoint(endpointId) {

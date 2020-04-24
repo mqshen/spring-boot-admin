@@ -68,7 +68,7 @@ public class DefaultServiceInstanceConverter implements ServiceInstanceConverter
 		LOGGER.debug("Converting service '{}' running at '{}' with metadata {}", instance.getServiceId(),
 				instance.getUri(), instance.getMetadata());
 
-		return Registration.create(instance.getServiceId(), getHealthUrl(instance).toString())
+		return Registration.create(instance.getServiceId(), instance.getInstanceId(), getHealthUrl(instance).toString())
 				.managementUrl(getManagementUrl(instance).toString()).serviceUrl(getServiceUrl(instance).toString())
 				.metadata(getMetadata(instance)).build();
 	}

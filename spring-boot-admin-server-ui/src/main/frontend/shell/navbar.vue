@@ -33,10 +33,10 @@
               <span v-text="linkTitle" />
             </a>
             <div class="navbar-dropdown">
-              <a class="navbar-item" href="http://192.168.203.147:9090/" target="_blank">服务注册</a>
-              <a class="navbar-item" href="http://192.168.203.147:8079/" target="_blank">熔断监控</a>
-              <a class="navbar-item" href="http://192.168.203.147:9411/" target="_blank">链路追踪</a>
-              <a class="navbar-item" href="http://192.168.203.147:5601/" target="_blank">Kibana</a>
+              <a class="navbar-item" :href="eurekaUrl" target="_blank">服务注册</a>
+              <a class="navbar-item" :href="hystrixUrl" target="_blank">熔断监控</a>
+              <a class="navbar-item" :href="zipkinUrl" target="_blank">链路追踪</a>
+              <a class="navbar-item" :href="kibanaUrl" target="_blank">Kibana</a>
             </div>
           </div>
           <template v-for="view in enabledViews">
@@ -59,6 +59,7 @@
               <component :is="view.handle" />
             </a>
           </template>
+          <a :href="taskUrl" target="_blank" rel="noopener noreferrer" class="navbar-item">任务</a>
 
           <div class="navbar-item has-dropdown is-hoverable" v-if="userName">
             <a class="navbar-link">
@@ -104,6 +105,11 @@
     data: () => ({
       showMenu: false,
       brand: '<img src="assets/img/icon-spring-boot-admin.svg"><span>Spring Boot Admin</span>',
+      eurekaUrl: 'http://192.168.203.147:9090/',
+      hystrixUrl: 'http://192.168.203.147:8079/',
+      zipkinUrl: 'http://192.168.203.147:9411/',
+      kibanaUrl: 'http://192.168.203.147:5601/',
+      taskUrl: 'http://192.168.203.146:5050/index.html',
       userName: null,
       csrfToken: null,
       csrfParameterName: null,
@@ -141,6 +147,11 @@
     },
     created() {
       this.brand = sbaConfig.uiSettings.brand;
+      this.eurekaUrl = sbaConfig.uiSettings.thirdPartUrl.eurekaUrl;
+      this.hystrixUrl = sbaConfig.uiSettings.thirdPartUrl.hystrixUrl;
+      this.zipkinUrl = sbaConfig.uiSettings.thirdPartUrl.zipkinUrl;
+      this.kibanaUrl = sbaConfig.uiSettings.thirdPartUrl.kibanaUrl;
+      this.taskUrl = sbaConfig.uiSettings.thirdPartUrl.taskUrl;
       this.userName = sbaConfig.user ? sbaConfig.user.name : null;
       this.csrfToken = readCookie('XSRF-TOKEN');
       this.csrfParameterName = sbaConfig.csrf.parameterName;

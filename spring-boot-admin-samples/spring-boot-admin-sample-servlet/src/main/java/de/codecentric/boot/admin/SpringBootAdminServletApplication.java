@@ -50,13 +50,14 @@ public class SpringBootAdminServletApplication {
 	}
 
 	@Configuration
-    public static class SecurityPermitAllConfig extends WebSecurityConfigurerAdapter {
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http.authorizeRequests().anyRequest().permitAll()
-                    .and().csrf().disable();
-        }
-    }
+	public static class SecurityPermitAllConfig extends WebSecurityConfigurerAdapter {
+
+		@Override
+		protected void configure(HttpSecurity http) throws Exception {
+			http.authorizeRequests().anyRequest().permitAll().and().csrf().disable();
+		}
+
+	}
 
 	// tag::customization-instance-exchange-filter-function[]
 	@Bean

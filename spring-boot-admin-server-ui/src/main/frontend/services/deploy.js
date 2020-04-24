@@ -1,4 +1,4 @@
-import axios, {redirectOn401} from '@/utils/axios';
+import axios from '@/utils/axios';
 import uri from '@/utils/uri';
 
 class Deploy{
@@ -7,8 +7,7 @@ class Deploy{
       this.axios = axios.create({
         // baseURL: uri`applications/${this.name}/`,
       });
-      this.axios.interceptors.response.use(response => response, redirectOn401()
-      );
+      this.axios.interceptors.response.use(response => response);
     }
     async fetchDeploy() {
         return this.axios.get(uri`deploy`);

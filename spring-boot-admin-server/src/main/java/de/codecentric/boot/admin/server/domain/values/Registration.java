@@ -40,6 +40,8 @@ public final class Registration implements Serializable {
 
 	private final String name;
 
+	private final String eurekaId;
+
 	@Nullable
 	private final String managementUrl;
 
@@ -53,8 +55,8 @@ public final class Registration implements Serializable {
 	private final Map<String, String> metadata;
 
 	@lombok.Builder(builderClassName = "Builder", toBuilder = true)
-	private Registration(String name, @Nullable String managementUrl, String healthUrl, @Nullable String serviceUrl,
-			String source, @lombok.Singular("metadata") Map<String, String> metadata) {
+	private Registration(String name, String eurekaId, @Nullable String managementUrl, String healthUrl,
+			@Nullable String serviceUrl, String source, @lombok.Singular("metadata") Map<String, String> metadata) {
 		Assert.hasText(name, "'name' must not be empty.");
 		Assert.hasText(healthUrl, "'healthUrl' must not be empty.");
 		Assert.isTrue(checkUrl(healthUrl), "'healthUrl' is not valid: " + healthUrl);
@@ -62,12 +64,17 @@ public final class Registration implements Serializable {
 				"'managementUrl' is not valid: " + managementUrl);
 		Assert.isTrue(StringUtils.isEmpty(serviceUrl) || checkUrl(serviceUrl),
 				"'serviceUrl' is not valid: " + serviceUrl);
+		this.eurekaId = eurekaId;
 		this.name = name;
 		this.managementUrl = managementUrl;
 		this.healthUrl = healthUrl;
 		this.serviceUrl = serviceUrl;
 		this.source = source;
 		this.metadata = new LinkedHashMap<>(metadata);
+	}
+
+	public static Registration.Builder create(String name, String eurekaId, String healthUrl) {
+		return builder().name(name).eurekaId(eurekaId).healthUrl(healthUrl);
 	}
 
 	public static Registration.Builder create(String name, String healthUrl) {

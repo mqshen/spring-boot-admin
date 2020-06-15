@@ -29,7 +29,8 @@ export default {
   }),
   computed: {
     timeAgo() {
-      return moment(this.date).short(true, this.now);
+      var temp = typeof this.date === "number" ? moment.unix(this.date) : moment(this.date);
+      return temp.short(true, this.now);
     }
   },
   created() {

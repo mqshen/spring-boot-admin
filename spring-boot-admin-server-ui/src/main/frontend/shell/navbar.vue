@@ -36,7 +36,7 @@
               <a class="navbar-item" :href="eurekaUrl" target="_blank">服务注册</a>
               <a class="navbar-item" :href="hystrixUrl" target="_blank">熔断监控</a>
               <a class="navbar-item" :href="zipkinUrl" target="_blank">链路追踪</a>
-              <a class="navbar-item" :href="kibanaUrl" target="_blank">Kibana</a>
+              <a class="navbar-item" :href="kibanaUrl" target="_blank">日志查询</a>
             </div>
           </div>
           <template v-for="view in enabledViews">
@@ -115,7 +115,7 @@
       csrfParameterName: null,
       availableLanguages: [],
       currentLanguage: null,
-      linkTitle: '基础服务'
+      linkTitle: '监控'
     }),
     props: {
       views: {

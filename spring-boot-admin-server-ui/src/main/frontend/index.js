@@ -27,6 +27,7 @@ import sbaShell from './shell';
 import Store from './store';
 import ViewRegistry from './viewRegistry';
 import views from './views';
+import './common.js'
 
 moment.locale(navigator.language.split('-')[0]);
 Vue.use(VueRouter);

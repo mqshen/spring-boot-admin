@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,9 @@ import static org.springframework.util.StringUtils.isEmpty;
  * Converts any {@link ServiceInstance}s to {@link Instance}s. To customize the health- or
  * management-url for all instances you can set healthEndpointPath or
  * managementContextPath respectively. If you want to influence the url per service you
- * can add <code>management.context-path</code>, <code>management.port</code>,
- * <code>management.address</code> or <code>health.path</code> to the instances metadata.
+ * can add <code>management.scheme</code>, <code>management.address</code>,
+ * <code>management.port</code>, <code>management.context-path</code> or
+ * <code>health.path</code> to the instances metadata.
  *
  * @author Johannes Edmeier
  */
@@ -43,11 +44,13 @@ public class DefaultServiceInstanceConverter implements ServiceInstanceConverter
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultServiceInstanceConverter.class);
 
+	private static final String KEY_MANAGEMENT_SCHEME = "management.scheme";
+
+	private static final String KEY_MANAGEMENT_ADDRESS = "management.address";
+
 	private static final String KEY_MANAGEMENT_PORT = "management.port";
 
 	private static final String KEY_MANAGEMENT_PATH = "management.context-path";
-
-	private static final String KEY_MANAGEMENT_ADDRESS = "management.address";
 
 	private static final String KEY_HEALTH_PATH = "health.path";
 
@@ -87,13 +90,32 @@ public class DefaultServiceInstanceConverter implements ServiceInstanceConverter
 	}
 
 	protected URI getManagementUrl(ServiceInstance instance) {
-		return UriComponentsBuilder.newInstance().scheme(getManagementScheme(instance))
-				.host(getManagementHost(instance)).port(getManagementPort(instance)).path("/")
-				.path(getManagementPath(instance)).build().toUri();
+		URI serviceUrl = this.getServiceUrl(instance);
+		String managementScheme = this.getManagementScheme(instance);
+		String managementHost = this.getManagementHost(instance);
+		int managementPort = this.getManagementPort(instance);
+
+		UriComponentsBuilder builder;
+		if (serviceUrl.getHost().equals(managementHost) && serviceUrl.getScheme().equals(managementScheme)
+				&& serviceUrl.getPort() == managementPort) {
+			builder = UriComponentsBuilder.fromUri(serviceUrl);
+		}
+		else {
+			builder = UriComponentsBuilder.newInstance().scheme(managementScheme).host(managementHost);
+			if (managementPort != -1) {
+				builder.port(managementPort);
+			}
+		}
+
+		return builder.path("/").path(getManagementPath(instance)).build().toUri();
 	}
 
 	private String getManagementScheme(ServiceInstance instance) {
-		return this.getServiceUrl(instance).getScheme();
+		String managementServerScheme = instance.getMetadata().get(KEY_MANAGEMENT_SCHEME);
+		if (!isEmpty(managementServerScheme)) {
+			return managementServerScheme;
+		}
+		return getServiceUrl(instance).getScheme();
 	}
 
 	protected String getManagementHost(ServiceInstance instance) {
@@ -104,12 +126,12 @@ public class DefaultServiceInstanceConverter implements ServiceInstanceConverter
 		return getServiceUrl(instance).getHost();
 	}
 
-	protected String getManagementPort(ServiceInstance instance) {
+	protected int getManagementPort(ServiceInstance instance) {
 		String managementPort = instance.getMetadata().get(KEY_MANAGEMENT_PORT);
 		if (!isEmpty(managementPort)) {
-			return managementPort;
+			return Integer.parseInt(managementPort);
 		}
-		return String.valueOf(getServiceUrl(instance).getPort());
+		return getServiceUrl(instance).getPort();
 	}
 
 	protected String getManagementPath(ServiceInstance instance) {
@@ -121,7 +143,7 @@ public class DefaultServiceInstanceConverter implements ServiceInstanceConverter
 	}
 
 	protected URI getServiceUrl(ServiceInstance instance) {
-		return UriComponentsBuilder.fromUri(instance.getUri()).path("/").build().toUri();
+		return instance.getUri();
 	}
 
 	protected Map<String, String> getMetadata(ServiceInstance instance) {

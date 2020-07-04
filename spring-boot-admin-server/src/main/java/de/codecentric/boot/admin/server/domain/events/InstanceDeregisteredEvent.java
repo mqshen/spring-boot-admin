@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import de.codecentric.boot.admin.server.domain.values.InstanceId;
 @lombok.ToString(callSuper = true)
 public class InstanceDeregisteredEvent extends InstanceEvent {
 
+	public static final String TYPE = "DEREGISTERED";
+
 	private static final long serialVersionUID = 1L;
 
 	public InstanceDeregisteredEvent(InstanceId instance, long version) {
@@ -37,7 +39,7 @@ public class InstanceDeregisteredEvent extends InstanceEvent {
 	}
 
 	public InstanceDeregisteredEvent(InstanceId instance, long version, Instant timestamp) {
-		super(instance, version, "DEREGISTERED", timestamp);
+		super(instance, version, TYPE, timestamp);
 	}
 
 }

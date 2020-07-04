@@ -93,7 +93,7 @@
       this.instance = instance;
       this.version = version;
       this.type = type;
-      var temp = typeof timestamp === "number" ? moment.unix(this.date) : moment(timestamp);
+      var temp = typeof timestamp === "number" ? moment.unix(timestamp) : moment(timestamp);
       this.timestamp = temp;
       this.payload = payload;
     }

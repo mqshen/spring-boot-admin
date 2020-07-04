@@ -43,13 +43,13 @@ public class DefaultServiceInstanceConverter implements ServiceInstanceConverter
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultServiceInstanceConverter.class);
 
-	private static final String KEY_MANAGEMENT_PORT = "management.port";
+	private static final String KEY_MANAGEMENT_PORT = "management-port";
 
-	private static final String KEY_MANAGEMENT_PATH = "management.context-path";
+	private static final String KEY_MANAGEMENT_PATH = "management-context-path";
 
-	private static final String KEY_MANAGEMENT_ADDRESS = "management.address";
+	private static final String KEY_MANAGEMENT_ADDRESS = "management-address";
 
-	private static final String KEY_HEALTH_PATH = "health.path";
+	private static final String KEY_HEALTH_PATH = "health-path";
 
 	/**
 	 * Default context-path to be appended to the url of the discovered service for the

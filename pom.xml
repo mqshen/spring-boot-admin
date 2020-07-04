@@ -79,7 +79,7 @@
         <module>spring-boot-admin-build</module>
         <module>spring-boot-admin-starter-server</module>
         <module>spring-boot-admin-starter-client</module>
-<!--        <module>spring-boot-admin-samples</module>-->
+        <module>spring-boot-admin-samples</module>
     </modules>
     <organization>
         <name>codecentric AG</name>
@@ -567,6 +567,65 @@
             </pluginRepositories>
         </profile>
     </profiles>
+
+    <repositories>
+        <repository>
+            <id>ifp-snapshots</id>
+            <name>ifp Nexus Snapshots</name>
+            <url>http://121.42.204.12:8081/nexus/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>aliyun</id>
+            <name>aliyun</name>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>maven2</id>
+            <name>maven2</name>
+            <url>https://repo.maven.apache.org/maven2/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>ifg</id>
+            <name>ifp</name>
+            <url>http://121.42.204.12:8081/nexus/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ifp-snapshots</id>

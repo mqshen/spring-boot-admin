@@ -159,7 +159,7 @@
       this.availableLanguages = (isEmpty(sbaConfig.uiSettings.availableLanguages)) ?
         AVAILABLE_LANGUAGES :
         sbaConfig.uiSettings.availableLanguages.filter(language => AVAILABLE_LANGUAGES.includes(language))
-      this.currentLanguage = this.$i18n.locale;
+      this.currentLanguage = 'zh-CN';//this.$i18n.locale;
     },
     mounted() {
       document.documentElement.classList.add('has-navbar-fixed-top');

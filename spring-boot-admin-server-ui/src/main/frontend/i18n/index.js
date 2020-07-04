@@ -28,7 +28,7 @@ if (!browserLanguage.includes('zh')) {
 
 const i18n = new VueI18n({
   fallbackLocale: 'en',
-  locale: AVAILABLE_LANGUAGES.includes(browserLanguage) ? browserLanguage : 'en',
+  locale: AVAILABLE_LANGUAGES.includes(browserLanguage) ? browserLanguage : 'zh',
   silentFallbackWarn: process.env.NODE_ENV === 'production',
   silentTranslationWarn: process.env.NODE_ENV === 'production',
   messages

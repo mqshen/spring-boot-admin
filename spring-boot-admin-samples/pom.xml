@@ -29,7 +29,7 @@
         <relativePath>../spring-boot-admin-build</relativePath>
     </parent>
     <modules>
-        <module>spring-boot-admin-sample-servlet</module>
+        <module>spring-boot-admin-sample-consul</module>
 <!--        <module>spring-boot-admin-sample-reactive</module>-->
 <!--        <module>spring-boot-admin-sample-war</module>-->
 <!--        <module>spring-boot-admin-sample-hazelcast</module>-->

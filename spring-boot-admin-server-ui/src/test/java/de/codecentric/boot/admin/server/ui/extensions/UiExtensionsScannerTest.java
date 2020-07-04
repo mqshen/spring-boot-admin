@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@
 package de.codecentric.boot.admin.server.ui.extensions;
 
 import java.io.IOException;
-import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,18 +29,19 @@ public class UiExtensionsScannerTest {
 
 	@Test
 	public void should_find_extensions() throws IOException {
-		List<UiExtension> extensions = this.scanner.scan("classpath:/META-INF/test-extensions/");
-		assertThat(extensions).containsExactlyInAnyOrder(
-				new UiExtension("custom/custom.abcdef.js",
-						"classpath:/META-INF/test-extensions/custom/custom.abcdef.js"),
-				new UiExtension("custom/custom.abcdef.css",
-						"classpath:/META-INF/test-extensions/custom/custom.abcdef.css"));
+		UiExtensions extensions = this.scanner.scan("classpath:/META-INF/test-extensions/");
+		assertThat(extensions.getCssExtensions()).contains(new UiExtension("custom/custom.abcdef.css",
+				"classpath:/META-INF/test-extensions/custom/custom.abcdef.css"));
+
+		assertThat(extensions.getJsExtensions()).contains(new UiExtension("custom/custom.abcdef.js",
+				"classpath:/META-INF/test-extensions/custom/custom.abcdef.js"));
 	}
 
 	@Test
 	public void should_not_find_extensions() throws IOException {
-		List<UiExtension> extensions = this.scanner.scan("classpath:/META-INF/NO-test-extensions/");
-		assertThat(extensions).isEmpty();
+		UiExtensions extensions = this.scanner.scan("classpath:/META-INF/NO-test-extensions/");
+		assertThat(extensions.getCssExtensions()).isEmpty();
+		assertThat(extensions.getJsExtensions()).isEmpty();
 	}
 
 }

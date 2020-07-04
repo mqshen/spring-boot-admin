@@ -36,6 +36,8 @@ spring:
               environment: test
   jmx:
     enabled: true
+  main:
+    lazy-initialization: true
 ---
 
 # tag::customization-external-views[]

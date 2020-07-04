@@ -18,7 +18,7 @@ package de.codecentric.boot.admin.server.services;
 
 import java.time.Duration;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +78,7 @@ public class AbstractEventHandlerTest {
 				.expectNext(firstEvent, secondEvent).thenCancel().verify(Duration.ofSeconds(1));
 	}
 
-	public final class TestEventHandler extends AbstractEventHandler<InstanceRegisteredEvent> {
+	public static final class TestEventHandler extends AbstractEventHandler<InstanceRegisteredEvent> {
 
 		private final FluxSink<InstanceEvent> sink;
 

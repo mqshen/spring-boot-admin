@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,12 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import de.codecentric.boot.admin.server.domain.entities.InstanceRepository;
@@ -41,22 +43,13 @@ import de.codecentric.boot.admin.server.web.client.InstanceExchangeFilterFunctio
 @EnableAutoConfiguration
 @EnableAdminServer
 @Import({ SecurityPermitAllConfig.class, SecuritySecureConfig.class, NotifierConfig.class })
+@Lazy(false)
 public class SpringBootAdminServletApplication {
 
 	private static final Logger log = LoggerFactory.getLogger(SpringBootAdminServletApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringBootAdminServletApplication.class, args);
-	}
-
-	@Configuration
-	public static class SecurityPermitAllConfig extends WebSecurityConfigurerAdapter {
-
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			http.authorizeRequests().anyRequest().permitAll().and().csrf().disable();
-		}
-
 	}
 
 	// tag::customization-instance-exchange-filter-function[]
@@ -99,6 +92,12 @@ public class SpringBootAdminServletApplication {
 	@Bean
 	public AuditEventRepository auditEventRepository() {
 		return new InMemoryAuditEventRepository();
+	}
+
+	@Bean
+	public EmbeddedDatabase dataSource() {
+		return new EmbeddedDatabaseBuilder().setType(EmbeddedDatabaseType.HSQL)
+				.addScript("org/springframework/session/jdbc/schema-hsqldb.sql").build();
 	}
 
 }

@@ -109,7 +109,10 @@ Registering the instance view works like for the top-level view with some additi
 include::{samples-dir}/spring-boot-admin-sample-custom-ui/src/index.js[tags=customization-ui-endpoint]
 ----
 <1> The parent must be 'instances' in order to render the new custom view for a single instance.
-<2> If you add a `isEnabled` callback you can figure out dynamically if the view should be show for the particular instance.
+<2> You can group views by assigning them to a group.
+<3> If you add a `isEnabled` callback you can figure out dynamically if the view should be show for the particular instance.
+
+NOTE: You can override default views by putting the same group and name as the one you want to override.
 
 === Customizing Header Logo and Title ===
 You can set custom information in the header (i.e. displaying staging information or company name) by using following configuration properties:
@@ -137,3 +140,8 @@ It is possible to use a custom favicon, which is also used for desktop notificat
 2. Configure the icons to use using the following properties:
   - `spring.boot.admin.ui.favicon`: Used as default icon. (e.g `assets/img/custom-favicon.png`
   - `spring.boot.admin.ui.favicon-danger`: Used when one or more service is down. (e.g `assets/img/custom-favicon-danger.png`)
+
+=== Customizing Available Languages ===
+To filter languages to a subset of all supported languages:
+
+- **spring.boot.admin.ui.available-languages**: Used as a filter of existing languages. (e.g `en,de` out of existing `de,en,fr,ko,pt-BR,ru,zh`)

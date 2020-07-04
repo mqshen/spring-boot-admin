@@ -1,7 +1,0 @@
-{
-  "instances": {
-    "jenkins": {
-      "label": "持续集成"
-    }    
-  }
-}

@@ -26,7 +26,7 @@
     <description>Spring Boot Admin</description>
     <url>https://github.com/codecentric/spring-boot-admin/</url>
     <properties>
-        <revision>2.3.0-SNAPSHOT</revision>
+        <revision>2.3.1-SNAPSHOT</revision>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -75,11 +75,11 @@
         <module>spring-boot-admin-server-ui</module>
         <module>spring-boot-admin-client</module>
         <module>spring-boot-admin-dependencies</module>
-        <module>spring-boot-admin-docs</module>
+<!--        <module>spring-boot-admin-docs</module>-->
         <module>spring-boot-admin-build</module>
         <module>spring-boot-admin-starter-server</module>
         <module>spring-boot-admin-starter-client</module>
-        <module>spring-boot-admin-samples</module>
+<!--        <module>spring-boot-admin-samples</module>-->
     </modules>
     <organization>
         <name>codecentric AG</name>
@@ -569,14 +569,14 @@
     </profiles>
     <distributionManagement>
         <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <id>ifp-snapshots</id>
+            <name>ifp Nexus Snapshots</name>
+            <url>http://121.42.204.12:8081/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
         <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Nexus Release Repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>ifp-staging</id>
+            <name>ifp Release Repository</name>
+            <url>http://121.42.204.12:8081/nexus/content/repositories/releases/</url>
         </repository>
     </distributionManagement>
 </project>

@@ -59,7 +59,8 @@ export default {
   }),
   computed: {
     timeAgo() {
-      return shortFormat(moment(this.date), true, this.now);
+      var temp = typeof this.date === "number" ? moment.unix(this.date) : moment(this.date);
+      return shortFormat(temp, true, this.now);
     }
   },
   created() {

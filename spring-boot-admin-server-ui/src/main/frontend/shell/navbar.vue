@@ -59,7 +59,7 @@
               <component :is="view.handle" />
             </a>
           </template>
-          <a :href="taskUrl" target="_blank" rel="noopener noreferrer" class="navbar-item">任务</a>
+          <a class="navbar-item" @click="handleTask">任务</a>
 
           <div class="navbar-item has-dropdown is-hoverable" v-if="userName">
             <a class="navbar-link">
@@ -144,6 +144,10 @@
         this.$i18n.locale = lang;
         this.currentLanguage = lang;
         moment.locale(lang);
+      },
+      handleTask() {
+        const otherWindow = window.open(this.taskUrl, '任务调度');
+        otherWindow.opener = null;
       }
     },
     created() {

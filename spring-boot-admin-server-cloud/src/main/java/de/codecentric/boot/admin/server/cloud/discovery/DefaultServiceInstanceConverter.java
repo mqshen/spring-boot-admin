@@ -73,7 +73,7 @@ public class DefaultServiceInstanceConverter implements ServiceInstanceConverter
 
 		return Registration.create(instance.getServiceId(), getHealthUrl(instance).toString())
 				.managementUrl(getManagementUrl(instance).toString()).serviceUrl(getServiceUrl(instance).toString())
-				.metadata(getMetadata(instance)).build();
+				.metadata(getMetadata(instance)).eurekaId(instance.getInstanceId()).build();
 	}
 
 	protected URI getHealthUrl(ServiceInstance instance) {
